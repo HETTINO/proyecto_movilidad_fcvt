@@ -5,100 +5,89 @@ import (
 	"net/http"
 	"strconv"
 
-	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/storage"
-
 	"github.com/go-chi/chi/v5"
+
+	"proyecto_movilidad_fcvt/internal/modelos"
 )
 
-type ParqueaderoHandler struct {
-	repo storage.ParqueaderoRepository
+// ListarParqueaderos atiende GET /api/v1/parqueaderos
+func (s *Server) ListarParqueaderos(w http.ResponseWriter, _ *http.Request) {
+	parqueaderos := s.Parqueadero.Listar()
+	responderJSON(w, http.StatusOK, parqueaderos)
 }
 
-func NewParqueaderoHandler(repo storage.ParqueaderoRepository) *ParqueaderoHandler {
-	return &ParqueaderoHandler{
-		repo: repo,
-	}
-}
-
-// GET /api/parqueaderos
-func (h *ParqueaderoHandler) Listar(w http.ResponseWriter, r *http.Request) {
-	parqueaderos := h.repo.ListarParqueaderos()
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(parqueaderos)
-}
-
-// GET /api/parqueaderos/{id}
-func (h *ParqueaderoHandler) Obtener(w http.ResponseWriter, r *http.Request) {
+// ObtenerParqueadero atiende GET /api/v1/parqueaderos/{id}
+func (s *Server) ObtenerParqueadero(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	parqueadero, ok := h.repo.BuscarParqueaderoPorID(id)
-	if !ok {
-		http.Error(w, "Parqueadero no encontrado", http.StatusNotFound)
+	parqueadero, encontrado := s.Parqueadero.Obtener(id)
+	if !encontrado {
+		responderError(w, http.StatusNotFound, "parqueadero no encontrado")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(parqueadero)
+	responderJSON(w, http.StatusOK, parqueadero)
 }
 
-// POST /api/parqueaderos
-func (h *ParqueaderoHandler) Crear(w http.ResponseWriter, r *http.Request) {
-	var parqueadero modelos.Parqueadero
+// CrearParqueadero atiende POST /api/v1/parqueaderos
+func (s *Server) CrearParqueadero(w http.ResponseWriter, r *http.Request) {
+	var nuevo modelos.Parqueadero
 
-	if err := json.NewDecoder(r.Body).Decode(&parqueadero); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&nuevo); err != nil {
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	nuevo := h.repo.CrearParqueadero(parqueadero)
+	creado, err := s.Parqueadero.Crear(nuevo)
+	if err != nil {
+		responderError(w, statusDeError(err), err.Error())
+		return
+	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-
-	json.NewEncoder(w).Encode(nuevo)
+	responderJSON(w, http.StatusCreated, creado)
 }
 
-// PUT /api/parqueaderos/{id}
-func (h *ParqueaderoHandler) Actualizar(w http.ResponseWriter, r *http.Request) {
+// ActualizarParqueadero atiende PUT /api/v1/parqueaderos/{id}
+func (s *Server) ActualizarParqueadero(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
 	var datos modelos.Parqueadero
-
 	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	actualizado, ok := h.repo.ActualizarParqueadero(id, datos)
-	if !ok {
-		http.Error(w, "Parqueadero no encontrado", http.StatusNotFound)
+	actualizado, encontrado, err := s.Parqueadero.Actualizar(id, datos)
+	if err != nil {
+		responderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if !encontrado {
+		responderError(w, http.StatusNotFound, "parqueadero no encontrado")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actualizado)
+	responderJSON(w, http.StatusOK, actualizado)
 }
 
-// DELETE /api/parqueaderos/{id}
-func (h *ParqueaderoHandler) Eliminar(w http.ResponseWriter, r *http.Request) {
+// BorrarParqueadero atiende DELETE /api/v1/parqueaderos/{id}
+func (s *Server) BorrarParqueadero(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	if !h.repo.BorrarParqueadero(id) {
-		http.Error(w, "Parqueadero no encontrado", http.StatusNotFound)
+	if err := s.Parqueadero.Borrar(id); err != nil {
+		responderError(w, http.StatusNotFound, err.Error())
 		return
 	}
 

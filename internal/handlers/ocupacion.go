@@ -5,112 +5,108 @@ import (
 	"net/http"
 	"strconv"
 
-	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/storage"
-
 	"github.com/go-chi/chi/v5"
+
+	"proyecto_movilidad_fcvt/internal/modelos"
 )
 
-type OcupacionHandler struct {
-	repo storage.OcupacionesRepository
+// ListarOcupaciones atiende GET /api/v1/ocupaciones
+func (s *Server) ListarOcupaciones(w http.ResponseWriter, _ *http.Request) {
+	ocupaciones := s.Ocupacion.Listar()
+	responderJSON(w, http.StatusOK, ocupaciones)
 }
 
-func NewOcupacionHandler(repo storage.OcupacionesRepository) *OcupacionHandler {
-	return &OcupacionHandler{
-		repo: repo,
-	}
-}
-
-// GET /api/ocupaciones
-func (h *OcupacionHandler) Listar(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(h.repo.ListarOcupaciones())
-}
-
-// GET /api/ocupaciones/{id}
-func (h *OcupacionHandler) Obtener(w http.ResponseWriter, r *http.Request) {
+// ObtenerOcupacion atiende GET /api/v1/ocupaciones/{id}
+func (s *Server) ObtenerOcupacion(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	ocupacion, ok := h.repo.BuscarOcupacionPorID(id)
-	if !ok {
-		http.Error(w, "Ocupación no encontrada", http.StatusNotFound)
+	ocupacion, encontrado := s.Ocupacion.Obtener(id)
+	if !encontrado {
+		responderError(w, http.StatusNotFound, "ocupación no encontrada")
 		return
 	}
 
-	json.NewEncoder(w).Encode(ocupacion)
+	responderJSON(w, http.StatusOK, ocupacion)
 }
 
-// POST /api/ocupaciones
-func (h *OcupacionHandler) Crear(w http.ResponseWriter, r *http.Request) {
-	var ocupacion modelos.Ocupacion
+// CrearOcupacion atiende POST /api/v1/ocupaciones
+func (s *Server) CrearOcupacion(w http.ResponseWriter, r *http.Request) {
+	var nueva modelos.Ocupacion
 
-	if err := json.NewDecoder(r.Body).Decode(&ocupacion); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&nueva); err != nil {
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	nueva := h.repo.CrearOcupacion(ocupacion)
+	creada, err := s.Ocupacion.Crear(nueva)
+	if err != nil {
+		responderError(w, statusDeError(err), err.Error())
+		return
+	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(nueva)
+	responderJSON(w, http.StatusCreated, creada)
 }
 
-// PUT /api/ocupaciones/{id}
-func (h *OcupacionHandler) Actualizar(w http.ResponseWriter, r *http.Request) {
+// ActualizarOcupacion atiende PUT /api/v1/ocupaciones/{id}
+func (s *Server) ActualizarOcupacion(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
 	var datos modelos.Ocupacion
-
 	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	actualizada, ok := h.repo.ActualizarOcupacion(id, datos)
-	if !ok {
-		http.Error(w, "Ocupación no encontrada", http.StatusNotFound)
+	actualizada, encontrada, err := s.Ocupacion.Actualizar(id, datos)
+	if err != nil {
+		responderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if !encontrada {
+		responderError(w, http.StatusNotFound, "ocupación no encontrada")
 		return
 	}
 
-	json.NewEncoder(w).Encode(actualizada)
+	responderJSON(w, http.StatusOK, actualizada)
 }
 
-// DELETE /api/ocupaciones/{id}
-func (h *OcupacionHandler) Eliminar(w http.ResponseWriter, r *http.Request) {
+// BorrarOcupacion atiende DELETE /api/v1/ocupaciones/{id}
+func (s *Server) BorrarOcupacion(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	if !h.repo.BorrarOcupacion(id) {
-		http.Error(w, "Ocupación no encontrada", http.StatusNotFound)
+	if err := s.Ocupacion.Borrar(id); err != nil {
+		responderError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// PATCH /api/ocupaciones/{id}/liberar
-func (h *OcupacionHandler) Liberar(w http.ResponseWriter, r *http.Request) {
+// LiberarOcupacion atiende PATCH /api/v1/ocupaciones/{id}/liberar
+func (s *Server) LiberarOcupacion(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	ocupacion, ok := h.repo.LiberarOcupacion(id)
-	if !ok {
-		http.Error(w, "Ocupación no encontrada", http.StatusNotFound)
+	liberada, encontrada := s.Ocupacion.Liberar(id)
+	if !encontrada {
+		responderError(w, http.StatusNotFound, "ocupación no encontrada")
 		return
 	}
 
-	json.NewEncoder(w).Encode(ocupacion)
+	responderJSON(w, http.StatusOK, liberada)
 }

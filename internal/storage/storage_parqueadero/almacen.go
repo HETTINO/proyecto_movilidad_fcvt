@@ -33,4 +33,9 @@ type Almacen interface {
 	OcupacionesRepository
 }
 
+type UsuarioRepository interface {
+	CrearUsuario(u modelos.Usuario) (modelos.Usuario, error)
+	BuscarUsuarioPorEmail(email string) (modelos.Usuario, bool)
+}
+
 var _ Almacen = (*Memoria)(nil)

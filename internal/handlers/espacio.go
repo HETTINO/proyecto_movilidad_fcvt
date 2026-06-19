@@ -5,93 +5,89 @@ import (
 	"net/http"
 	"strconv"
 
-	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/storage"
-
 	"github.com/go-chi/chi/v5"
+
+	"proyecto_movilidad_fcvt/internal/modelos"
 )
 
-type EspacioHandler struct {
-	repo storage.EspacioRepository
+// ListarEspacios atiende GET /api/v1/espacios
+func (s *Server) ListarEspacios(w http.ResponseWriter, _ *http.Request) {
+	espacios := s.Espacio.Listar()
+	responderJSON(w, http.StatusOK, espacios)
 }
 
-func NewEspacioHandler(repo storage.EspacioRepository) *EspacioHandler {
-	return &EspacioHandler{
-		repo: repo,
-	}
-}
-
-// GET /api/espacios
-func (h *EspacioHandler) Listar(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(h.repo.ListarEspacios())
-}
-
-// GET /api/espacios/{id}
-func (h *EspacioHandler) Obtener(w http.ResponseWriter, r *http.Request) {
+// ObtenerEspacio atiende GET /api/v1/espacios/{id}
+func (s *Server) ObtenerEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	espacio, ok := h.repo.BuscarEspacioPorID(id)
-	if !ok {
-		http.Error(w, "Espacio no encontrado", http.StatusNotFound)
+	espacio, encontrado := s.Espacio.Obtener(id)
+	if !encontrado {
+		responderError(w, http.StatusNotFound, "espacio no encontrado")
 		return
 	}
 
-	json.NewEncoder(w).Encode(espacio)
+	responderJSON(w, http.StatusOK, espacio)
 }
 
-// POST /api/espacios
-func (h *EspacioHandler) Crear(w http.ResponseWriter, r *http.Request) {
-	var espacio modelos.Espacio
+// CrearEspacio atiende POST /api/v1/espacios
+func (s *Server) CrearEspacio(w http.ResponseWriter, r *http.Request) {
+	var nuevo modelos.Espacio
 
-	if err := json.NewDecoder(r.Body).Decode(&espacio); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&nuevo); err != nil {
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	nuevo := h.repo.CrearEspacio(espacio)
+	creado, err := s.Espacio.Crear(nuevo)
+	if err != nil {
+		responderError(w, statusDeError(err), err.Error())
+		return
+	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(nuevo)
+	responderJSON(w, http.StatusCreated, creado)
 }
 
-// PUT /api/espacios/{id}
-func (h *EspacioHandler) Actualizar(w http.ResponseWriter, r *http.Request) {
+// ActualizarEspacio atiende PUT /api/v1/espacios/{id}
+func (s *Server) ActualizarEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
 	var datos modelos.Espacio
-
 	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	actualizado, ok := h.repo.ActualizarEspacio(id, datos)
-	if !ok {
-		http.Error(w, "Espacio no encontrado", http.StatusNotFound)
+	actualizado, encontrado, err := s.Espacio.Actualizar(id, datos)
+	if err != nil {
+		responderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if !encontrado {
+		responderError(w, http.StatusNotFound, "espacio no encontrado")
 		return
 	}
 
-	json.NewEncoder(w).Encode(actualizado)
+	responderJSON(w, http.StatusOK, actualizado)
 }
 
-// DELETE /api/espacios/{id}
-func (h *EspacioHandler) Eliminar(w http.ResponseWriter, r *http.Request) {
+// BorrarEspacio atiende DELETE /api/v1/espacios/{id}
+func (s *Server) BorrarEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	if !h.repo.BorrarEspacio(id) {
-		http.Error(w, "Espacio no encontrado", http.StatusNotFound)
+	if err := s.Espacio.Borrar(id); err != nil {
+		responderError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
