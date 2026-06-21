@@ -2,42 +2,41 @@ package modelos
 
 import "time"
 
-
 type Ruta struct {
-	ID          int `json:"id"`
-	Nombre      string `json:"nombre"`
-	Descripcion string `json:"descripcion"`
+	ID          int    `json:"id" gorm:"primaryKey"`
+	Nombre      string `json:"nombre" gorm:"type:varchar(100)"`
+	Descripcion string `json:"descripcion" gorm:"type:text"`
 }
 
 type Parada struct {
-	IDParada int  `json:"id_parada"`
-	Nombre   string  `json:"nombre"`
+	IDParada int     `json:"id_parada" gorm:"primaryKey"`
+	Nombre   string  `json:"nombre" gorm:"type:varchar(100)"`
 	Latitud  float64 `json:"latitud"`
-	Longitu  float64 `json:"longitu"` 
-	RutaID   int  `json:"ruta_id"`
+	Longitud float64 `json:"longitud"`
 }
 
 type Carrito struct {
-	ID            int `json:"id"`
-	NombreCarrito string `json:"nombre_carrito"`
+	ID            int    `json:"id" gorm:"primaryKey"`
+	NombreCarrito string `json:"nombre_carrito" gorm:"type:varchar(100)"`
 	Capacidad     int    `json:"capacidad"`
-	Estado        string `json:"estado"`
-	RutaID        int `json:"ruta_id"`
+	Estado        string `json:"estado" gorm:"type:varchar(50)"`
+	RutaID        int    `json:"ruta_id"`
 }
 
 type Locacion struct {
-	ID        int    `json:"id"`
+	ID        int       `json:"id" gorm:"primaryKey"`
 	Latitud   float64   `json:"latitud"`
 	Longitud  float64   `json:"longitud"`
 	TimeStamp time.Time `json:"time_stamp"`
-	CarritoID string    `json:"carrito_id"`
+	CarritoID int       `json:"carrito_id"`
 }
 
 type Solicitud struct {
-	ID            int  `json:"id"`
-	CedulaUsuario string  `json:"cedula_usuario"`
-	CantPersonas  int     `json:"cant_personas"`
-	PuntoDestino  string  `json:"punto_destino"`
-	Estado        string  `json:"estado"`
-	IDCarrito     *string `json:"id_carrito,omitempty"` 
+	ID            int    `json:"id" gorm:"primaryKey"`
+	CedulaUsuario string `json:"cedula_usuario" gorm:"type:varchar(10)"`
+	CantPersonas  int    `json:"cant_personas"`
+	ParadaOrigen  int    `json:"parada_origen"`
+	PuntoDestino  string `json:"punto_destino" gorm:"type:varchar(100)"`
+	Estado        string `json:"estado" orm:"type:varchar(50)"`
+	IDCarrito     *int   `json:"id_carrito,omitempty"`
 }
