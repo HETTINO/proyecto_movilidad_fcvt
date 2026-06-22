@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/service"
+	"proyecto_movilidad_fcvt/internal/service/service_acceso" // <-- Subcarpeta de tu módulo
 )
 
 type UsuarioHandler struct {
-	servicio *service.AccesoServicio
+	servicio *service_acceso.UsuarioService // <-- Cambiado al nuevo servicio específico
 }
 
-func NuevoUsuarioHandler(serv *service.AccesoServicio) *UsuarioHandler {
+func NuevoUsuarioHandler(serv *service_acceso.UsuarioService) *UsuarioHandler { // <-- Cambiado aquí también
 	return &UsuarioHandler{servicio: serv}
 }
 
@@ -28,13 +28,13 @@ func (h *UsuarioHandler) RegistrarUsuarioHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Llama a la persistencia a través del servicio
-	if err := h.servicio.GuardarUsuario(&nuevoUsuario); err != nil {
+	// Consumimos el método .Crear() estructurado de tu servicio de acceso
+	if _, err := h.servicio.Crear(nuevoUsuario); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario registrado exitosamente"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"mensaje": "Usuario registrado exitosamente"})
 }

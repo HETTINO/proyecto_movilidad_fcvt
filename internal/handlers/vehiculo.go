@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/service"
+	"proyecto_movilidad_fcvt/internal/service/service_acceso" // <-- Tu subcarpeta de módulo
 )
 
 type VehiculoHandler struct {
-	servicio *service.AccesoServicio
+	servicio *service_acceso.VehiculoService // <-- Cambiado al servicio específico de Vehículos
 }
 
-func NuevoVehiculoHandler(serv *service.AccesoServicio) *VehiculoHandler {
+func NuevoVehiculoHandler(serv *service_acceso.VehiculoService) *VehiculoHandler { // <-- Cambiado aquí también
 	return &VehiculoHandler{servicio: serv}
 }
 
@@ -28,12 +28,13 @@ func (h *VehiculoHandler) RegistrarVehiculoHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	if err := h.servicio.GuardarVehiculo(&nuevoVehiculo); err != nil {
+	// Consumimos el método .Crear() estructurado de tu servicio de vehículos
+	if _, err := h.servicio.Crear(nuevoVehiculo); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"mensaje": "Vehículo registrado exitosamente"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"mensaje": "Vehículo registrado exitosamente"})
 }

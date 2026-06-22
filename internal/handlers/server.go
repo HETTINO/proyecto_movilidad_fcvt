@@ -2,29 +2,29 @@ package handlers
 
 import (
 	"proyecto_movilidad_fcvt/internal/service"
-	// sp "proyecto_movilidad_fcvt/internal/service/service_parqueadero" // <-- COMENTADO: Tu rama no tiene esta carpeta
+	"proyecto_movilidad_fcvt/internal/service/service_acceso" // <-- Tu subcarpeta de accesos
 )
 
 type Server struct {
-	// Parqueadero *sp.ParqueaderoService // <-- COMENTADO
-	// Espacio     *sp.EspacioService     // <-- COMENTADO
-	// Ocupacion   *sp.OcupacionService   // <-- COMENTADO
-	Auth   *service.AuthService
-	Acceso *service.AccesoServicio
+	Auth        *service.AuthService
+	Acceso      *service_acceso.AccesoService
+	Usuario     *service_acceso.UsuarioService
+	Vehiculo    *service_acceso.VehiculoService
+	PuntoAcceso *service_acceso.PuntoAccesoService
 }
 
 func NewServer(
-	// parqueadero *sp.ParqueaderoService, // <-- COMENTADO
-	// espacio *sp.EspacioService,         // <-- COMENTADO
-	// ocupacion *sp.OcupacionService,     // <-- COMENTADO
 	auth *service.AuthService,
-	acceso *service.AccesoServicio,
+	acceso *service_acceso.AccesoService,
+	usuario *service_acceso.UsuarioService,
+	vehiculo *service_acceso.VehiculoService,
+	puntoAcceso *service_acceso.PuntoAccesoService,
 ) *Server {
 	return &Server{
-		// Parqueadero: parqueadero,
-		// Espacio:     espacio,
-		// Ocupacion:   ocupacion,
-		Auth:   auth,
-		Acceso: acceso,
+		Auth:        auth,
+		Acceso:      acceso,
+		Usuario:     usuario,
+		Vehiculo:    vehiculo,
+		PuntoAcceso: puntoAcceso,
 	}
 }
