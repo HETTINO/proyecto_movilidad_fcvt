@@ -1,0 +1,11 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "internal/db/db_parqueadero/schema.sql"
+    queries: "internal/db/db_parqueadero"
+    gen:
+      go:
+        package: "sqlcdb"
+        out: "internal/storage/sqlcdb_parqueadero"
+        emit_json_tags: false
+        emit_prepared_queries: false

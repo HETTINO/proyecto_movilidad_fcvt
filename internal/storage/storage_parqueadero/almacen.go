@@ -1,4 +1,4 @@
-package storage
+package storage_parqueadero
 
 import "proyecto_movilidad_fcvt/internal/modelos"
 

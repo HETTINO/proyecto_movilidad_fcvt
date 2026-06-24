@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
+	_ "github.com/glebarez/go-sqlite" // driver database/sql "sqlite" (pure-Go) para el backend sqlc
+	"github.com/glebarez/sqlite"      // driver GORM (pure-Go)
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"proyecto_movilidad_fcvt/internal/handlers"
@@ -19,7 +22,7 @@ import (
 )
 
 func main() {
-	// 1. GORM abre la DB y migra el esquema.
+	// 1. GORM es el DUEÑO DEL ESQUEMA: abre la DB, migra y siembra.
 	gdb, err := gorm.Open(sqlite.Open("parqueadero.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("no se pudo abrir la base de datos: ", err)
@@ -28,35 +31,53 @@ func main() {
 		&modelos.Parqueadero{},
 		&modelos.Espacio{},
 		&modelos.Ocupacion{},
-		&modelos.Usuario{},
 	); err != nil {
 		log.Fatal("falló AutoMigrate: ", err)
 	}
+	almacenGorm := storage.NuevoAlmacenSQLite(gdb)
+	almacenGorm.SembrarSiVacio()
 
-	// 2. Almacén en memoria + seed de datos de prueba.
-	memoria := storage.NuevaMemoria()
-	memoria.SeedParqueaderos()
-	memoria.SeedEspacios()
-	memoria.SeedOcupaciones()
-	log.Println("Datos de prueba cargados")
+	// 2. Elegir el backend según STORAGE.
+	var almacen storage.Almacen
+	switch os.Getenv("STORAGE") {
+	case "sqlc":
+		sdb, err := sql.Open("sqlite", "parqueadero.db")
+		if err != nil {
+			log.Fatal("no se pudo abrir sql.DB para sqlc: ", err)
+		}
+		almacen = storage.NuevoAlmacenSQLC(sdb)
+		log.Println("Backend: sqlc (database/sql)")
+	case "memoria":
+		mem := storage.NuevaMemoria()
+		mem.SeedParqueaderos()
+		mem.SeedEspacios()
+		mem.SeedOcupaciones()
+		almacen = mem
+		log.Println("Backend: MEMORIA")
+	default:
+		almacen = almacenGorm
+		log.Println("Backend: GORM")
+	}
 
-	// 3. Servicios con inyección de dependencias.
+	// 3. Los usuarios viven SIEMPRE en GORM.
 	usuarioRepo := us.NewUsuarioGORM(gdb)
-	authService := service.NewAuthService(usuarioRepo)
-	parqueaderoService := sp.NewParqueaderoService(memoria)
-	espacioService := sp.NewEspacioService(memoria)
-	ocupacionService := sp.NewOcupacionService(memoria)
 
-	// 4. Server central con todos los servicios.
+	// 4. Capa de servicio.
+	authService := service.NewAuthService(usuarioRepo)
+	parqueaderoService := sp.NewParqueaderoService(almacen)
+	espacioService := sp.NewEspacioService(almacen)
+	ocupacionService := sp.NewOcupacionService(almacen)
+
+	// 5. Server con los servicios inyectados.
 	servidor := handlers.NewServer(parqueaderoService, espacioService, ocupacionService, authService)
 
-	// 5. Router + middleware.
+	// 6. Router + middleware global.
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(middleware.CORS)
 
-	// 6. Rutas versionadas /api/v1/.
+	// 7. Rutas versionadas /api/v1/.
 	r.Route("/api/v1", func(r chi.Router) {
 
 		// Públicas

@@ -1,6 +1,8 @@
 package serviceparqueadero
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrNombreVacio           = errors.New("nombre es requerido")
