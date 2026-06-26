@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
 )
 
@@ -36,21 +37,21 @@ func (s *ParqueaderoService) Actualizar(id int, datos modelos.Parqueadero) (mode
 	}
 	actualizado, encontrado := s.repo.ActualizarParqueadero(id, datos)
 	if !encontrado {
-		return modelos.Parqueadero{}, false, ErrNoEncontrado
+		return modelos.Parqueadero{}, false, service.ErrNoEncontrado
 	}
 	return actualizado, true, nil
 }
 
 func (s *ParqueaderoService) Borrar(id int) error {
 	if !s.repo.BorrarParqueadero(id) {
-		return ErrNoEncontrado
+		return service.ErrNoEncontrado
 	}
 	return nil
 }
 
 func validarParqueadero(p modelos.Parqueadero) error {
 	if strings.TrimSpace(p.Nombre) == "" {
-		return ErrNombreVacio
+		return service.ErrNombreVacio
 	}
 	return nil
 }

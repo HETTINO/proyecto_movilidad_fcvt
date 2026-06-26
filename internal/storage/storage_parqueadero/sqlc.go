@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"proyecto_movilidad_fcvt/internal/modelos"
-	"proyecto_movilidad_fcvt/internal/storage/sqlcdb"
+	sqlcdb "proyecto_movilidad_fcvt/internal/storage/sqlcdb_parqueadero"
 )
 
 type AlmacenSQLC struct {

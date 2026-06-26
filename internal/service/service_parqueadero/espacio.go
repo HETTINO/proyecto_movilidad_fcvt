@@ -2,6 +2,7 @@ package serviceparqueadero
 
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
 )
 
@@ -34,21 +35,21 @@ func (s *EspacioService) Actualizar(id int, datos modelos.Espacio) (modelos.Espa
 	}
 	actualizado, encontrado := s.repo.ActualizarEspacio(id, datos)
 	if !encontrado {
-		return modelos.Espacio{}, false, ErrNoEncontrado
+		return modelos.Espacio{}, false, service.ErrNoEncontrado
 	}
 	return actualizado, true, nil
 }
 
 func (s *EspacioService) Borrar(id int) error {
 	if !s.repo.BorrarEspacio(id) {
-		return ErrNoEncontrado
+		return service.ErrNoEncontrado
 	}
 	return nil
 }
 
 func validarEspacio(e modelos.Espacio) error {
 	if e.IDParqueadero == 0 {
-		return ErrCampoRequerido
+		return service.ErrCampoRequerido
 	}
 	return nil
 }
