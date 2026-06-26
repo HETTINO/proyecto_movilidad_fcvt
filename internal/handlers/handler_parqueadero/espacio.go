@@ -1,4 +1,4 @@
-package handlers
+package handler_parqueadero
 
 import (
 	"encoding/json"
@@ -10,39 +10,39 @@ import (
 	"proyecto_movilidad_fcvt/internal/modelos"
 )
 
-// ListarParqueaderos atiende GET /api/v1/parqueaderos
-func (s *Server) ListarParqueaderos(w http.ResponseWriter, _ *http.Request) {
-	parqueaderos := s.Parqueadero.Listar()
-	responderJSON(w, http.StatusOK, parqueaderos)
+// ListarEspacios atiende GET /api/v1/espacios
+func (s *Server) ListarEspacios(w http.ResponseWriter, _ *http.Request) {
+	espacios := s.Espacio.Listar()
+	responderJSON(w, http.StatusOK, espacios)
 }
 
-// ObtenerParqueadero atiende GET /api/v1/parqueaderos/{id}
-func (s *Server) ObtenerParqueadero(w http.ResponseWriter, r *http.Request) {
+// ObtenerEspacio atiende GET /api/v1/espacios/{id}
+func (s *Server) ObtenerEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	parqueadero, encontrado := s.Parqueadero.Obtener(id)
+	espacio, encontrado := s.Espacio.Obtener(id)
 	if !encontrado {
-		responderError(w, http.StatusNotFound, "parqueadero no encontrado")
+		responderError(w, http.StatusNotFound, "espacio no encontrado")
 		return
 	}
 
-	responderJSON(w, http.StatusOK, parqueadero)
+	responderJSON(w, http.StatusOK, espacio)
 }
 
-// CrearParqueadero atiende POST /api/v1/parqueaderos
-func (s *Server) CrearParqueadero(w http.ResponseWriter, r *http.Request) {
-	var nuevo modelos.Parqueadero
+// CrearEspacio atiende POST /api/v1/espacios
+func (s *Server) CrearEspacio(w http.ResponseWriter, r *http.Request) {
+	var nuevo modelos.Espacio
 
 	if err := json.NewDecoder(r.Body).Decode(&nuevo); err != nil {
 		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	creado, err := s.Parqueadero.Crear(nuevo)
+	creado, err := s.Espacio.Crear(nuevo)
 	if err != nil {
 		responderError(w, statusDeError(err), err.Error())
 		return
@@ -51,42 +51,42 @@ func (s *Server) CrearParqueadero(w http.ResponseWriter, r *http.Request) {
 	responderJSON(w, http.StatusCreated, creado)
 }
 
-// ActualizarParqueadero atiende PUT /api/v1/parqueaderos/{id}
-func (s *Server) ActualizarParqueadero(w http.ResponseWriter, r *http.Request) {
+// ActualizarEspacio atiende PUT /api/v1/espacios/{id}
+func (s *Server) ActualizarEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	var datos modelos.Parqueadero
+	var datos modelos.Espacio
 	if err := json.NewDecoder(r.Body).Decode(&datos); err != nil {
 		responderError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 		return
 	}
 
-	actualizado, encontrado, err := s.Parqueadero.Actualizar(id, datos)
+	actualizado, encontrado, err := s.Espacio.Actualizar(id, datos)
 	if err != nil {
 		responderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if !encontrado {
-		responderError(w, http.StatusNotFound, "parqueadero no encontrado")
+		responderError(w, http.StatusNotFound, "espacio no encontrado")
 		return
 	}
 
 	responderJSON(w, http.StatusOK, actualizado)
 }
 
-// BorrarParqueadero atiende DELETE /api/v1/parqueaderos/{id}
-func (s *Server) BorrarParqueadero(w http.ResponseWriter, r *http.Request) {
+// BorrarEspacio atiende DELETE /api/v1/espacios/{id}
+func (s *Server) BorrarEspacio(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		responderError(w, http.StatusBadRequest, "id debe ser un número entero")
 		return
 	}
 
-	if err := s.Parqueadero.Borrar(id); err != nil {
+	if err := s.Espacio.Borrar(id); err != nil {
 		responderError(w, http.StatusNotFound, err.Error())
 		return
 	}

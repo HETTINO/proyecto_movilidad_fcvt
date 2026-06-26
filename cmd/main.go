@@ -12,7 +12,7 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"gorm.io/gorm"
 
-	"proyecto_movilidad_fcvt/internal/handlers"
+	handlers "proyecto_movilidad_fcvt/internal/handlers/handler_parqueadero"
 	"proyecto_movilidad_fcvt/internal/middleware"
 	"proyecto_movilidad_fcvt/internal/modelos"
 	"proyecto_movilidad_fcvt/internal/service"

@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 
-	"proyecto_movilidad_fcvt/internal/handlers"
+	hp "proyecto_movilidad_fcvt/internal/handlers/handler_parqueadero"
 	"proyecto_movilidad_fcvt/internal/middleware"
 	"proyecto_movilidad_fcvt/internal/modelos"
 	"proyecto_movilidad_fcvt/internal/service"
@@ -70,7 +70,7 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 
 	authSvc := service.NewAuthService(usuarios)
 
-	srv := handlers.NewServer(
+	srv := hp.NewServer(
 		parqueaderoSvc,
 		espacioSvc,
 		ocupacionSvc,
