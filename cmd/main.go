@@ -1,112 +1,177 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
-	"os"
 
-	_ "github.com/glebarez/go-sqlite" // driver database/sql "sqlite" (pure-Go) para el backend sqlc
-	"github.com/glebarez/sqlite"      // driver GORM (pure-Go)
+	_ "github.com/glebarez/go-sqlite"
+	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"gorm.io/gorm"
 
-	handlers "proyecto_movilidad_fcvt/internal/handlers/handler_parqueadero"
+	// Parqueadero
+	handlerParqueadero "proyecto_movilidad_fcvt/internal/handlers/handler_parqueadero"
+	modelosParqueadero "proyecto_movilidad_fcvt/internal/modelos"
+	serviceParqueadero "proyecto_movilidad_fcvt/internal/service/service_parqueadero"
+	storageParqueadero "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
+
+	// Transporte
+	handlerTransporte "proyecto_movilidad_fcvt/internal/handlers/handler_transporte"
+	modelosTransporte "proyecto_movilidad_fcvt/internal/modelos"
+	serviceTransporte "proyecto_movilidad_fcvt/internal/service/service_transporte"
+	storageTransporte "proyecto_movilidad_fcvt/internal/storage/storage_transporte"
+
+	// Compartidos
 	"proyecto_movilidad_fcvt/internal/middleware"
-	"proyecto_movilidad_fcvt/internal/modelos"
 	"proyecto_movilidad_fcvt/internal/service"
-	sp "proyecto_movilidad_fcvt/internal/service/service_parqueadero"
-	us "proyecto_movilidad_fcvt/internal/storage"
-	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
+	storageUser "proyecto_movilidad_fcvt/internal/storage"
 )
 
 func main() {
-	// 1. GORM es el DUEÑO DEL ESQUEMA: abre la DB, migra y siembra.
+
+	// DB GORM
 	gdb, err := gorm.Open(sqlite.Open("parqueadero.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("no se pudo abrir la base de datos: ", err)
 	}
+
+	// MIGRACIONES (TODO JUNTO)
 	if err := gdb.AutoMigrate(
-		&modelos.Parqueadero{},
-		&modelos.Espacio{},
-		&modelos.Ocupacion{},
-		&modelos.Usuario{},
+		&modelosParqueadero.Parqueadero{},
+		&modelosParqueadero.Espacio{},
+		&modelosParqueadero.Ocupacion{},
+
+		&modelosTransporte.Ruta{},
+		&modelosTransporte.Carrito{},
+		&modelosTransporte.Parada{},
+		&modelosTransporte.Locacion{},
+		&modelosTransporte.Solicitud{},
+
+		&modelosParqueadero.Usuario{},
 	); err != nil {
 		log.Fatal("falló AutoMigrate: ", err)
 	}
-	almacenGorm := storage.NuevoAlmacenSQLite(gdb)
-	almacenGorm.SembrarSiVacio()
 
-	// 2. Elegir el backend según STORAGE.
-	var almacen storage.Almacen
-	switch os.Getenv("STORAGE") {
-	case "sqlc":
-		sdb, err := sql.Open("sqlite", "parqueadero.db")
-		if err != nil {
-			log.Fatal("no se pudo abrir sql.DB para sqlc: ", err)
-		}
-		almacen = storage.NuevoAlmacenSQLC(sdb)
-		log.Println("Backend: sqlc (database/sql)")
-	case "memoria":
-		mem := storage.NuevaMemoria()
-		mem.SeedParqueaderos()
-		mem.SeedEspacios()
-		mem.SeedOcupaciones()
-		almacen = mem
-		log.Println("Backend: MEMORIA")
-	default:
-		almacen = almacenGorm
-		log.Println("Backend: GORM")
-	}
+	// =========================
+	// STORAGE PARQUEADERO
+	// =========================
+	memParqueadero := storageParqueadero.NuevoAlmacenSQLite(gdb)
+	memParqueadero.SembrarSiVacio()
 
-	// 3. Los usuarios viven SIEMPRE en GORM.
-	usuarioRepo := us.NewUsuarioGORM(gdb)
+	// =========================
+	// STORAGE TRANSPORTE
+	// =========================
+	memTransporte := storageTransporte.NuevaMemoria()
+	memTransporte.SeedRutas()
+	memTransporte.SeedCarritos()
+	memTransporte.SeedLocaciones()
+	memTransporte.SeedParadas()
+	memTransporte.SeedSolicitudes()
 
-	// 4. Capa de servicio.
+	// =========================
+	// SERVICIOS PARQUEADERO
+	// =========================
+	usuarioRepo := storageUser.NewUsuarioGORM(gdb)
+
 	authService := service.NewAuthService(usuarioRepo)
-	parqueaderoService := sp.NewParqueaderoService(almacen)
-	espacioService := sp.NewEspacioService(almacen)
-	ocupacionService := sp.NewOcupacionService(almacen)
 
-	// 5. Server con los servicios inyectados.
-	servidor := handlers.NewServer(parqueaderoService, espacioService, ocupacionService, authService)
+	parqueaderoService := serviceParqueadero.NewParqueaderoService(memParqueadero)
+	espacioService := serviceParqueadero.NewEspacioService(memParqueadero)
+	ocupacionService := serviceParqueadero.NewOcupacionService(memParqueadero)
 
-	// 6. Router + middleware global.
+	// =========================
+	// SERVICIOS TRANSPORTE
+	// =========================
+	rutaService := serviceTransporte.NewRutaService(memTransporte)
+	carritoService := serviceTransporte.NewCarritoService(memTransporte)
+	paradaService := serviceTransporte.NewParadaService(memTransporte)
+	locacionService := serviceTransporte.NewLocacionService(memTransporte)
+	solicitudService := serviceTransporte.NewSolicitudService(memTransporte)
+
+	// =========================
+	// SERVERS
+	// =========================
+	parqueaderoServer := handlerParqueadero.NewServer(
+		parqueaderoService,
+		espacioService,
+		ocupacionService,
+		authService,
+	)
+
+	transporteServer := handlerTransporte.NewServer(
+		rutaService,
+		carritoService,
+		paradaService,
+		locacionService,
+		solicitudService,
+	)
+
+	// =========================
+	// ROUTER
+	// =========================
 	r := chi.NewRouter()
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 	r.Use(middleware.CORS)
 
-	// 7. Rutas versionadas /api/v1/.
 	r.Route("/api/v1", func(r chi.Router) {
 
-		// Públicas
-		r.Post("/auth/register", servidor.Registrar)
-		r.Post("/auth/login", servidor.Login)
+		// AUTH (usa parqueadero)
+		r.Post("/auth/register", parqueaderoServer.Registrar)
+		r.Post("/auth/login", parqueaderoServer.Login)
 
-		// Protegidas
+		// PROTEGIDAS PARQUEADERO
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(authService))
 
-			r.Get("/parqueaderos", servidor.ListarParqueaderos)
-			r.Post("/parqueaderos", servidor.CrearParqueadero)
-			r.Get("/parqueaderos/{id}", servidor.ObtenerParqueadero)
-			r.Put("/parqueaderos/{id}", servidor.ActualizarParqueadero)
-			r.Delete("/parqueaderos/{id}", servidor.BorrarParqueadero)
+			r.Get("/parqueaderos", parqueaderoServer.ListarParqueaderos)
+			r.Post("/parqueaderos", parqueaderoServer.CrearParqueadero)
+			r.Get("/parqueaderos/{id}", parqueaderoServer.ObtenerParqueadero)
+			r.Put("/parqueaderos/{id}", parqueaderoServer.ActualizarParqueadero)
+			r.Delete("/parqueaderos/{id}", parqueaderoServer.BorrarParqueadero)
 
-			r.Get("/espacios", servidor.ListarEspacios)
-			r.Post("/espacios", servidor.CrearEspacio)
-			r.Get("/espacios/{id}", servidor.ObtenerEspacio)
-			r.Put("/espacios/{id}", servidor.ActualizarEspacio)
-			r.Delete("/espacios/{id}", servidor.BorrarEspacio)
+			r.Get("/espacios", parqueaderoServer.ListarEspacios)
+			r.Post("/espacios", parqueaderoServer.CrearEspacio)
+			r.Get("/espacios/{id}", parqueaderoServer.ObtenerEspacio)
+			r.Put("/espacios/{id}", parqueaderoServer.ActualizarEspacio)
+			r.Delete("/espacios/{id}", parqueaderoServer.BorrarEspacio)
 
-			r.Get("/ocupaciones", servidor.ListarOcupaciones)
-			r.Post("/ocupaciones", servidor.CrearOcupacion)
-			r.Get("/ocupaciones/{id}", servidor.ObtenerOcupacion)
-			r.Put("/ocupaciones/{id}", servidor.ActualizarOcupacion)
-			r.Delete("/ocupaciones/{id}", servidor.BorrarOcupacion)
-			r.Patch("/ocupaciones/{id}/liberar", servidor.LiberarOcupacion)
+			r.Get("/ocupaciones", parqueaderoServer.ListarOcupaciones)
+			r.Post("/ocupaciones", parqueaderoServer.CrearOcupacion)
+			r.Get("/ocupaciones/{id}", parqueaderoServer.ObtenerOcupacion)
+			r.Put("/ocupaciones/{id}", parqueaderoServer.ActualizarOcupacion)
+			r.Delete("/ocupaciones/{id}", parqueaderoServer.BorrarOcupacion)
+			r.Patch("/ocupaciones/{id}/liberar", parqueaderoServer.LiberarOcupacion)
+		})
+
+		// TRANSPORTE (sin auth o con auth si quieres)
+		r.Group(func(r chi.Router) {
+
+			r.Get("/rutas", transporteServer.ListarRutas)
+			r.Post("/rutas", transporteServer.CrearRuta)
+			r.Get("/rutas/{id}", transporteServer.ObtenerRuta)
+			r.Put("/rutas/{id}", transporteServer.ActualizarRuta)
+			r.Delete("/rutas/{id}", transporteServer.BorrarRuta)
+
+			r.Get("/carritos", transporteServer.ListarCarritos)
+			r.Post("/carritos", transporteServer.CrearCarrito)
+			r.Get("/carritos/{id}", transporteServer.ObtenerCarrito)
+			r.Put("/carritos/{id}", transporteServer.ActualizarCarrito)
+			r.Delete("/carritos/{id}", transporteServer.BorrarCarrito)
+
+			r.Get("/paradas", transporteServer.ListarParadas)
+			r.Post("/paradas", transporteServer.CrearParada)
+			r.Get("/paradas/{id}", transporteServer.ObtenerParada)
+			r.Put("/paradas/{id}", transporteServer.ActualizarParada)
+			r.Delete("/paradas/{id}", transporteServer.BorrarParada)
+
+			r.Get("/locaciones", transporteServer.ListarLocaciones)
+			r.Post("/locaciones", transporteServer.RegistrarLocacion)
+			r.Get("/tiempo-estimado", transporteServer.GetTiempoEstimado)
+
+			r.Get("/solicitudes", transporteServer.ListarSolicitudes)
+			r.Post("/solicitudes", transporteServer.CrearSolicitud)
 		})
 	})
 

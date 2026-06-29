@@ -1,4 +1,5 @@
 version: "2"
+
 sql:
   - engine: "sqlite"
     schema: "internal/db/db_parqueadero/schema.sql"
@@ -7,5 +8,11 @@ sql:
       go:
         package: "sqlcdb"
         out: "internal/storage/sqlcdb_parqueadero"
-        emit_json_tags: false
-        emit_prepared_queries: false
+
+  - engine: "sqlite"
+    schema: "internal/db/db_transporte/schema.sql"
+    queries: "internal/db/db_transporte"
+    gen:
+      go:
+        package: "sqlcdb_transporte"
+        out: "internal/storage/sqlcdb_transporte"
