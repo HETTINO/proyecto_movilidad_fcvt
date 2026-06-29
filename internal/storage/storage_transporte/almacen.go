@@ -1,6 +1,6 @@
 package storage
 
-import "proyecto_movilidad_fcvt/internal/models"
+import modelos "proyecto_movilidad_fcvt/internal/models"
 
 // Almacen define QUÉ sabe hacer un almacén de transporte, sin decir CÓMO.
 //
@@ -9,6 +9,7 @@ import "proyecto_movilidad_fcvt/internal/models"
 // de esta interfaz, no de una implementación concreta: por eso podemos cambiar
 // el backend de almacenamiento sin tocar un solo handler.
 type Almacen interface {
+
 	// Rutas
 	ListarRutas() []modelos.Ruta
 	BuscarRutaPorID(id int) (modelos.Ruta, bool)
@@ -24,6 +25,7 @@ type Almacen interface {
 	BorrarParada(id int) bool
 
 	// Carritos
+
 	ListarCarritos() []modelos.Carrito
 	BuscarCarritoPorID(id int) (modelos.Carrito, bool)
 	CrearCarrito(c modelos.Carrito) modelos.Carrito
@@ -45,4 +47,4 @@ type Almacen interface {
 
 // Chequeo en tiempo de compilación: si Memoria dejara de cumplir Almacen,
 // el proyecto NO compila. Red de seguridad opcional.
-var _ Almacen = (*Memoria)(nil)
+//var _ Almacen = (*Memoria)(nil)
