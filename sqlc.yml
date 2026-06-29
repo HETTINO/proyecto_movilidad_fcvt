@@ -1,0 +1,11 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "internal/db/db_transporte/schema.sql"
+    queries: "internal/db/db_transporte"
+    gen:
+      go:
+        package: "sqlcdb_transporte"
+        out: "internal/storage/sqlcdb_transporte"
+        emit_json_tags: false
+        emit_prepared_queries: false

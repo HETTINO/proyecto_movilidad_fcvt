@@ -32,3 +32,5 @@ func (m *Memoria) ObtenerUltimaLocacionPorCarrito(carritoID int) (modelos.Locaci
 	}
 	return ultima, encontrado
 }
+
+
