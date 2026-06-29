@@ -1,8 +1,7 @@
-package sqlite_test_parqueadero
-
+package storage_test
 import (
-	"proyecto_movilidad_fcvt/internal/modelos"
-	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
+	modelos "proyecto_movilidad_fcvt/internal/modelos"
+	storage "proyecto_movilidad_fcvt/internal/storage/storage_transporte"
 	"testing"
 
 	"github.com/glebarez/sqlite"
@@ -15,9 +14,11 @@ func abrirDBMemoria(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 	err = db.AutoMigrate(
-		&modelos.Parqueadero{},
-		&modelos.Espacio{},
-		&modelos.Ocupacion{},
+		&modelos.Solicitud{},
+		&modelos.Carrito{},
+		&modelos.Parada{},
+		&modelos.Ruta{},
+		&modelos.Locacion{},
 	)
 	require.NoError(t, err)
 	return db

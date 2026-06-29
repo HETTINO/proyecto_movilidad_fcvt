@@ -1,5 +1,4 @@
-package handlers_test
-
+package handler_parqueadero_test
 import (
 	"encoding/json"
 	"net/http"
@@ -13,8 +12,8 @@ import (
 	"proyecto_movilidad_fcvt/internal/modelos"
 )
 
-func TestCrearParqueadero_Exitoso(t *testing.T) {
-	h, token := construirEntorno(t)
+func TestCrearParqueadero(t *testing.T) {
+	hp, token := construirEntorno(t)
 
 	body := `{
 		"nombre":"Parqueadero Central",
@@ -32,7 +31,31 @@ func TestCrearParqueadero_Exitoso(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	h.ServeHTTP(rec, req)
+	hp.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusCreated, rec.Code)
+}
+
+func TestCrearParqueadero_Exitoso(t *testing.T) {
+	hp, token := construirEntorno(t)
+
+	body := `{
+		"nombre":"Parqueadero Central",
+		"capacidad":100,
+		"tipo":"cubierto"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/parqueaderos",
+		strings.NewReader(body),
+	)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	rec := httptest.NewRecorder()
+
+	hp.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusCreated, rec.Code)
 
@@ -46,7 +69,7 @@ func TestCrearParqueadero_Exitoso(t *testing.T) {
 
 func TestObtenerParqueadero_NoEncontrado(t *testing.T) {
 
-	h, token := construirEntorno(t)
+	hp, token := construirEntorno(t)
 
 	req := httptest.NewRequest(
 		http.MethodGet,
@@ -58,7 +81,7 @@ func TestObtenerParqueadero_NoEncontrado(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	h.ServeHTTP(rec, req)
+	hp.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }

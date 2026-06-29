@@ -1,5 +1,4 @@
-package service_parqueadero_test
-
+package serviceparqueadero_test
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
 	sp "proyecto_movilidad_fcvt/internal/service/service_parqueadero"

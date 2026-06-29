@@ -1,5 +1,4 @@
-package storage_test_parqueadero
-
+package storage_parqueadero_test
 import (
 	"testing"
 

@@ -1,5 +1,4 @@
-package handlers_test
-
+package handler_parqueadero_test
 import (
 	"encoding/json"
 	"net/http"

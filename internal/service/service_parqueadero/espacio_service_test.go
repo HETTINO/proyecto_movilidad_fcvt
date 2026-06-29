@@ -1,5 +1,4 @@
-package service_parqueadero_test
-
+package serviceparqueadero_test
 import (
 	"testing"
 

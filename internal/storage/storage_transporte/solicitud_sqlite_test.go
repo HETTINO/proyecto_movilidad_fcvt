@@ -1,5 +1,4 @@
-package sqlite_test_trasnporte
-
+package storage_test
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
 	"testing"
