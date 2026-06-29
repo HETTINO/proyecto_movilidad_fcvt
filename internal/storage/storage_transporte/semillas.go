@@ -10,7 +10,7 @@ func (m *Memoria) SeedRutas() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.rutas = []modelos.Ruta{
+	m.rutas = []models.Ruta{
 		{
 			ID:          1,
 			Nombre:      "Ruta A - Campus",
@@ -35,7 +35,7 @@ func (m *Memoria) SeedParadas() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.paradas = []modelos.Parada{
+	m.paradas = []models.Parada{
 		{
 			IDParada: 1,
 			Nombre:   "Entrada Principal",
@@ -69,7 +69,7 @@ func (m *Memoria) SeedCarritos() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.carritos = []modelos.Carrito{
+	m.carritos = []models.Carrito{
 		{
 			ID:            1,
 			NombreCarrito: "Carrito 1",
@@ -107,7 +107,7 @@ func (m *Memoria) SeedLocaciones() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.locaciones = []modelos.Locacion{
+	m.locaciones = []models.Locacion{
 		{
 			ID:        1,
 			Latitud:   -0.9203,
@@ -142,7 +142,7 @@ func (m *Memoria) SeedSolicitudes() {
 	carritoID1 := 1
 	cedulaEst2 := "0987654321"
 
-	m.solicitudes = []modelos.Solicitud{
+	m.solicitudes = []models.Solicitud{
 		{
 			ID:            1,
 			CedulaUsuario: cedulaEst1,
