@@ -2,6 +2,7 @@ package service_acceso
 
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 )
 
@@ -32,23 +33,26 @@ func (s *PuntoAccesoService) Actualizar(id int, datos modelos.PuntoDeAcceso) (mo
 	if err := validarPuntoAcceso(datos); err != nil {
 		return modelos.PuntoDeAcceso{}, false, err
 	}
+
 	actualizado, encontrado := s.repo.ActualizarPuntoAcceso(id, datos)
 	if !encontrado {
-		return modelos.PuntoDeAcceso{}, false, ErrNoEncontrado
+		return modelos.PuntoDeAcceso{}, false, service.ErrNoEncontrado
 	}
+
 	return actualizado, true, nil
 }
 
 func (s *PuntoAccesoService) Borrar(id int) error {
 	if !s.repo.BorrarPuntoAcceso(id) {
-		return ErrNoEncontrado
+		return service.ErrNoEncontrado
 	}
 	return nil
 }
 
+// VALIDACIÓN CORRECTA SEGÚN TU MODELO
 func validarPuntoAcceso(p modelos.PuntoDeAcceso) error {
-	if p.ID == 0 && p.Ubicacion == "" { // Usa campos estándar como ID o Ubicación si existen
-		return ErrCampoRequerido
+	if p.Ubicacion == "" {
+		return service.ErrCampoRequerido
 	}
 	return nil
 }

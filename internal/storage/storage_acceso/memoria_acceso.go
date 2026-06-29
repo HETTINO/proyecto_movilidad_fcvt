@@ -7,19 +7,28 @@ type MemoriaAcceso struct {
 	Vehiculos      []modelos.Vehiculo
 	PuntosDeAcceso []modelos.PuntoDeAcceso
 	Accesos        []modelos.Acceso
+
+	nextIDPuntoAcceso int
 }
 
 func NuevoMemoriaAcceso() *MemoriaAcceso {
 	return &MemoriaAcceso{
-		Usuarios:       make([]modelos.Usuario, 0),
-		Vehiculos:      make([]modelos.Vehiculo, 0),
-		PuntosDeAcceso: make([]modelos.PuntoDeAcceso, 0),
-		Accesos:        make([]modelos.Acceso, 0),
+		Usuarios:          make([]modelos.Usuario, 0),
+		Vehiculos:         make([]modelos.Vehiculo, 0),
+		PuntosDeAcceso:    make([]modelos.PuntoDeAcceso, 0),
+		Accesos:           make([]modelos.Acceso, 0),
+		nextIDPuntoAcceso: 1,
 	}
 }
 
 // ============================================================================
 // CONTRATOS (INTERFACES) QUE SE ENLAZAN CON TUS SERVICIOS
+//
+// Implementaciones:
+//   - AccesoRepository      -> CRUD_acceso.go
+//   - PuntoAccesoRepository -> CRUD_punto_acceso.go
+//   - UsuarioRepository     -> CRUD_usuario.go
+//   - VehiculoRepository    -> CRUD_vehiculo.go
 // ============================================================================
 
 type AccesoRepository interface {

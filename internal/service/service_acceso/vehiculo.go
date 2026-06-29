@@ -2,6 +2,7 @@ package service_acceso
 
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 )
 
@@ -34,21 +35,21 @@ func (s *VehiculoService) Actualizar(placa string, datos modelos.Vehiculo) (mode
 	}
 	actualizado, encontrado := s.repo.ActualizarVehiculo(placa, datos)
 	if !encontrado {
-		return modelos.Vehiculo{}, false, ErrNoEncontrado
+		return modelos.Vehiculo{}, false, service.ErrNoEncontrado
 	}
 	return actualizado, true, nil
 }
 
 func (s *VehiculoService) Borrar(placa string) error {
 	if !s.repo.BorrarVehiculo(placa) {
-		return ErrNoEncontrado
+		return service.ErrNoEncontrado
 	}
 	return nil
 }
 
 func validarVehiculo(v modelos.Vehiculo) error {
 	if v.Placa == "" {
-		return ErrCampoRequerido
+		return service.ErrCampoRequerido
 	}
 	return nil
 }

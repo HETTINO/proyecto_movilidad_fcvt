@@ -3,12 +3,13 @@ package service
 import "errors"
 
 var (
-	// Errores de Autenticación (Simétricos a los de parqueadero)
+	ErrNombreVacio           = errors.New("nombre es requerido")
+	ErrPrecioNegativo        = errors.New("precio no puede ser negativo")
+	ErrNoEncontrado          = errors.New("registro no encontrado")
+	ErrEmailenUso            = errors.New("email ya está en uso")
 	ErrCredencialesInvalidas = errors.New("credenciales inválidas")
-	ErrEmailenUso            = errors.New("el email ya está en uso")
-
-	// Errores específicos para tu módulo de Accesos
-	ErrUsuarioNoEncontrado  = errors.New("el usuario solicitado no existe")
-	ErrVehiculoNoRegistrado = errors.New("el vehículo no está registrado en el sistema")
-	ErrPuntoNoValido        = errors.New("el punto de acceso especificado no está activo o no existe")
+	ErrTokenInvalido         = errors.New("token inválido")
+	ErrEmailVacio            = errors.New("email es requerido")
+	ErrPasswordVacio         = errors.New("contraseña es requerida")
+	ErrCampoRequerido        = errors.New("campo requerido faltante")
 )

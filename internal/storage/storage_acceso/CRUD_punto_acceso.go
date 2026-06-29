@@ -2,7 +2,7 @@ package storage_acceso
 
 import "proyecto_movilidad_fcvt/internal/modelos"
 
-func (m *MemoriaAcceso) ListarPuntosDeAcceso() []modelos.PuntoDeAcceso {
+func (m *MemoriaAcceso) ListarPuntosAcceso() []modelos.PuntoDeAcceso {
 	// m.mu.Lock()
 	// defer m.mu.Unlock()
 
@@ -11,7 +11,7 @@ func (m *MemoriaAcceso) ListarPuntosDeAcceso() []modelos.PuntoDeAcceso {
 	return copia
 }
 
-func (m *MemoriaAcceso) BuscarPuntoPorID(id int) (modelos.PuntoDeAcceso, bool) {
+func (m *MemoriaAcceso) BuscarPuntoAccesoPorID(id int) (modelos.PuntoDeAcceso, bool) {
 	// m.mu.Lock()
 	// defer m.mu.Unlock()
 
@@ -23,18 +23,18 @@ func (m *MemoriaAcceso) BuscarPuntoPorID(id int) (modelos.PuntoDeAcceso, bool) {
 	return modelos.PuntoDeAcceso{}, false
 }
 
-func (m *MemoriaAcceso) CrearPuntoDeAcceso(p modelos.PuntoDeAcceso) modelos.PuntoDeAcceso {
+func (m *MemoriaAcceso) CrearPuntoAcceso(p modelos.PuntoDeAcceso) modelos.PuntoDeAcceso {
 	// m.mu.Lock()
 	// defer m.mu.Unlock()
 
-	// p.ID = m.nextPuntoID // Descomenta si usas un contador secuencial secuencial en tu struct
-	// m.nextPuntoID++
+	p.ID = m.nextIDPuntoAcceso
+	m.nextIDPuntoAcceso++
 
 	m.PuntosDeAcceso = append(m.PuntosDeAcceso, p)
 	return p
 }
 
-func (m *MemoriaAcceso) ActualizarPuntoDeAcceso(id int, datos modelos.PuntoDeAcceso) (modelos.PuntoDeAcceso, bool) {
+func (m *MemoriaAcceso) ActualizarPuntoAcceso(id int, datos modelos.PuntoDeAcceso) (modelos.PuntoDeAcceso, bool) {
 	// m.mu.Lock()
 	// defer m.mu.Unlock()
 
@@ -48,7 +48,7 @@ func (m *MemoriaAcceso) ActualizarPuntoDeAcceso(id int, datos modelos.PuntoDeAcc
 	return modelos.PuntoDeAcceso{}, false
 }
 
-func (m *MemoriaAcceso) BorrarPuntoDeAcceso(id int) bool {
+func (m *MemoriaAcceso) BorrarPuntoAcceso(id int) bool {
 	// m.mu.Lock()
 	// defer m.mu.Unlock()
 

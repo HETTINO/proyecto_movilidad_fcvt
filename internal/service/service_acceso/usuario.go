@@ -2,6 +2,7 @@ package service_acceso
 
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 )
 
@@ -32,23 +33,25 @@ func (s *UsuarioService) Actualizar(cedula string, datos modelos.Usuario) (model
 	if err := validarUsuario(datos); err != nil {
 		return modelos.Usuario{}, false, err
 	}
+
 	actualizado, encontrado := s.repo.ActualizarUsuario(cedula, datos)
 	if !encontrado {
-		return modelos.Usuario{}, false, ErrNoEncontrado
+		return modelos.Usuario{}, false, service.ErrNoEncontrado
 	}
+
 	return actualizado, true, nil
 }
 
 func (s *UsuarioService) Borrar(cedula string) error {
 	if !s.repo.BorrarUsuario(cedula) {
-		return ErrNoEncontrado
+		return service.ErrNoEncontrado
 	}
 	return nil
 }
 
 func validarUsuario(u modelos.Usuario) error {
-	if u.Cedula == "" || u.Nombre == "" {
-		return ErrCampoRequerido
+	if u.Cedula == "" || u.Nombre == "" || u.Email == "" {
+		return service.ErrCampoRequerido
 	}
 	return nil
 }
