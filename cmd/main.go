@@ -31,6 +31,7 @@ func main() {
 		&modelos.Parqueadero{},
 		&modelos.Espacio{},
 		&modelos.Ocupacion{},
+		&modelos.Usuario{},
 	); err != nil {
 		log.Fatal("falló AutoMigrate: ", err)
 	}
