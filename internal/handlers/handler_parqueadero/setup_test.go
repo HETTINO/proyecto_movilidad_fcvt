@@ -1,9 +1,7 @@
 package handler_parqueadero_test
+
 import (
-	"encoding/json"
 	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -11,42 +9,12 @@ import (
 
 	hp "proyecto_movilidad_fcvt/internal/handlers/handler_parqueadero"
 	"proyecto_movilidad_fcvt/internal/middleware"
-	"proyecto_movilidad_fcvt/internal/modelos"
 	"proyecto_movilidad_fcvt/internal/service"
 
 	sp "proyecto_movilidad_fcvt/internal/service/service_parqueadero"
+	storageAcceso "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
 )
-
-// =====================================================
-// Fake de usuarios
-// =====================================================
-
-type usuarioRepoFake struct {
-	porEmail map[string]modelos.Usuario
-	nextID   uint
-}
-
-func nuevoUsuarioRepoFake() *usuarioRepoFake {
-	return &usuarioRepoFake{
-		porEmail: map[string]modelos.Usuario{},
-		nextID:   1,
-	}
-}
-
-func (f *usuarioRepoFake) CrearUsuario(u modelos.Usuario) (modelos.Usuario, error) {
-	u.ID = f.nextID
-	f.nextID++
-
-	f.porEmail[u.Email] = u
-
-	return u, nil
-}
-
-func (f *usuarioRepoFake) BuscarUsuarioPorEmail(email string) (modelos.Usuario, bool) {
-	u, ok := f.porEmail[email]
-	return u, ok
-}
 
 // =====================================================
 // Construcción del entorno
@@ -61,7 +29,8 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 	mem.SeedEspacios()
 	mem.SeedOcupaciones()
 
-	usuarios := nuevoUsuarioRepoFake()
+	// Repositorio de usuarios del módulo de acceso (en memoria) para autenticación
+	usuarios := storageAcceso.NuevoMemoriaAcceso()
 
 	parqueaderoSvc := sp.NewParqueaderoService(mem)
 	espacioSvc := sp.NewEspacioService(mem)
@@ -79,9 +48,6 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 	r := chi.NewRouter()
 
 	r.Route("/api/v1", func(r chi.Router) {
-
-		r.Post("/auth/register", srv.Registrar)
-		r.Post("/auth/login", srv.Login)
 
 		r.Group(func(r chi.Router) {
 
@@ -110,7 +76,7 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 
 	})
 
-	token := registrarYObtenerToken(t, r)
+	token := registrarYObtenerToken(t, authSvc)
 
 	return r, token
 }
@@ -119,38 +85,21 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 // Obtener Token
 // =====================================================
 
-func registrarYObtenerToken(t *testing.T, h http.Handler) string {
-
+// registrarYObtenerToken crea un usuario directamente contra el AuthService
+// (sin pasar por HTTP, ya que el registro/login vive ahora en el módulo de acceso)
+// y devuelve un token válido para usarlo en los tests protegidos de parqueadero.
+func registrarYObtenerToken(t *testing.T, authSvc *service.AuthService) string {
 	t.Helper()
 
-	cred := `{"email":"docente@uleam.edu.ec","password":"secreta123"}`
+	const cedula = "0102030405"
+	const password = "secreta123"
 
-	reqReg := httptest.NewRequest(
-		http.MethodPost,
-		"/api/v1/auth/register",
-		strings.NewReader(cred),
-	)
+	_, err := authSvc.Registrar(cedula, "Docente Prueba", "docente@uleam.edu.ec", password, "docente")
+	require.NoError(t, err)
 
-	h.ServeHTTP(httptest.NewRecorder(), reqReg)
+	token, err := authSvc.Login(cedula, password)
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
 
-	reqLogin := httptest.NewRequest(
-		http.MethodPost,
-		"/api/v1/auth/login",
-		strings.NewReader(cred),
-	)
-
-	rec := httptest.NewRecorder()
-
-	h.ServeHTTP(rec, reqLogin)
-
-	require.Equal(t, http.StatusOK, rec.Code)
-
-	var resp struct {
-		Token string `json:"token"`
-	}
-
-	require.NoError(t, json.NewDecoder(rec.Body).Decode(&resp))
-	require.NotEmpty(t, resp.Token)
-
-	return resp.Token
+	return token
 }

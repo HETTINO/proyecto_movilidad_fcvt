@@ -13,6 +13,7 @@ type Parada struct {
 	Nombre   string  `json:"nombre" gorm:"type:varchar(100)"`
 	Latitud  float64 `json:"latitud"`
 	Longitud float64 `json:"longitud"`
+	RutaID   int     `json:"ruta_id"`
 }
 
 type Carrito struct {

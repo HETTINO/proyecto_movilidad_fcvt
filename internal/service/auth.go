@@ -2,10 +2,8 @@ package service
 
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
-	storage "proyecto_movilidad_fcvt/internal/storage/storage_parqueadero"
-
+	"proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 	"strings"
-
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -17,25 +15,29 @@ var secretJWT = []byte("cualquier_cosa_secreta")
 const duracionToken = 24 * time.Hour
 
 type Claims struct {
-	UsuarioID int `json:"uid"`
+	Cedula string `json:"cedula"` // Usamos la Cédula como identificador en tu módulo
 	jwt.RegisteredClaims
 }
 
 type AuthService struct {
-	repo storage.UsuarioRepository
+	repo storage_acceso.UsuarioRepository
 }
 
-func NewAuthService(repo storage.UsuarioRepository) *AuthService {
+func NewAuthService(repo storage_acceso.UsuarioRepository) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) Registrar(email, password string) (modelos.Usuario, error) {
+func (s *AuthService) Registrar(cedula, nombre, email, password, rol string) (modelos.Usuario, error) {
+	cedula = strings.TrimSpace(cedula)
 	email = strings.TrimSpace(email)
 	password = strings.TrimSpace(password)
-	if email == "" || password == "" {
+
+	if cedula == "" || email == "" || password == "" {
 		return modelos.Usuario{}, ErrCredencialesInvalidas
 	}
-	if _, existe := s.repo.BuscarUsuarioPorEmail(email); existe {
+
+	// Buscamos si ya existe por Cédula en tu MemoriaAcceso
+	if _, existe := s.repo.BuscarUsuarioPorCedula(cedula); existe {
 		return modelos.Usuario{}, ErrEmailenUso
 	}
 
@@ -44,24 +46,31 @@ func (s *AuthService) Registrar(email, password string) (modelos.Usuario, error)
 		return modelos.Usuario{}, err
 	}
 
-	return s.repo.CrearUsuario(modelos.Usuario{
-		Email:    email,
-		Password: string(hash),
-	})
+	nuevoUsuario := modelos.Usuario{
+		Cedula:     cedula,
+		Nombre:     strings.TrimSpace(nombre),
+		Email:      email,
+		Contrasena: string(hash), // Guardamos el hash seguro
+		Rol:        strings.TrimSpace(rol),
+	}
+
+	return s.repo.CrearUsuario(nuevoUsuario), nil
 }
 
-func (s *AuthService) Login(email, password string) (string, error) {
-	email = strings.TrimSpace(email)
+func (s *AuthService) Login(cedula, password string) (string, error) {
+	cedula = strings.TrimSpace(cedula)
 	password = strings.TrimSpace(password)
-	if email == "" || password == "" {
+
+	if cedula == "" || password == "" {
 		return "", ErrCredencialesInvalidas
 	}
-	u, existe := s.repo.BuscarUsuarioPorEmail(email)
+
+	u, existe := s.repo.BuscarUsuarioPorCedula(cedula)
 	if !existe {
 		return "", ErrCredencialesInvalidas
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Contrasena), []byte(password)); err != nil {
 		return "", ErrCredencialesInvalidas
 	}
 
@@ -70,7 +79,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 
 func (s *AuthService) generarToken(u modelos.Usuario) (string, error) {
 	claims := &Claims{
-		UsuarioID: int(u.ID),
+		Cedula: u.Cedula,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duracionToken)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -80,7 +89,7 @@ func (s *AuthService) generarToken(u modelos.Usuario) (string, error) {
 	return token.SignedString(secretJWT)
 }
 
-func (s *AuthService) ValidarToken(tokenStr string) (int, error) {
+func (s *AuthService) ValidarToken(tokenStr string) (string, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrCredencialesInvalidas
@@ -88,11 +97,11 @@ func (s *AuthService) ValidarToken(tokenStr string) (int, error) {
 		return secretJWT, nil
 	})
 	if err != nil || !token.Valid {
-		return 0, ErrCredencialesInvalidas
+		return "", ErrCredencialesInvalidas
 	}
-	Claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		return 0, ErrCredencialesInvalidas
+		return "", ErrCredencialesInvalidas
 	}
-	return Claims.UsuarioID, nil
+	return claims.Cedula, nil
 }

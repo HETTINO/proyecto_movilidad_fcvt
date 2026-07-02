@@ -22,10 +22,14 @@ import (
 	serviceTransporte "proyecto_movilidad_fcvt/internal/service/service_transporte"
 	storageTransporte "proyecto_movilidad_fcvt/internal/storage/storage_transporte"
 
+	// Acceso
+	handlerAcceso "proyecto_movilidad_fcvt/internal/handlers/handler_acceso"
+	serviceAcceso "proyecto_movilidad_fcvt/internal/service/service_acceso"
+	storageAcceso "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
+
 	// Compartidos
 	"proyecto_movilidad_fcvt/internal/middleware"
 	"proyecto_movilidad_fcvt/internal/service"
-	storageUser "proyecto_movilidad_fcvt/internal/storage"
 )
 
 func main() {
@@ -49,6 +53,9 @@ func main() {
 		&modelosTransporte.Solicitud{},
 
 		&modelosParqueadero.Usuario{},
+		&modelosParqueadero.Vehiculo{},
+		&modelosParqueadero.PuntoDeAcceso{},
+		&modelosParqueadero.Acceso{},
 	); err != nil {
 		log.Fatal("falló AutoMigrate: ", err)
 	}
@@ -70,11 +77,14 @@ func main() {
 	memTransporte.SeedSolicitudes()
 
 	// =========================
+	// STORAGE ACCESO (sqlite + gorm)
+	// =========================
+	memAcceso := storageAcceso.NuevoAlmacenSQLite(gdb)
+
+	// =========================
 	// SERVICIOS PARQUEADERO
 	// =========================
-	usuarioRepo := storageUser.NewUsuarioGORM(gdb)
-
-	authService := service.NewAuthService(usuarioRepo)
+	authService := service.NewAuthService(memAcceso)
 
 	parqueaderoService := serviceParqueadero.NewParqueaderoService(memParqueadero)
 	espacioService := serviceParqueadero.NewEspacioService(memParqueadero)
@@ -88,6 +98,14 @@ func main() {
 	paradaService := serviceTransporte.NewParadaService(memTransporte)
 	locacionService := serviceTransporte.NewLocacionService(memTransporte)
 	solicitudService := serviceTransporte.NewSolicitudService(memTransporte)
+
+	// =========================
+	// SERVICIOS ACCESO
+	// =========================
+	accesoService := serviceAcceso.NewAccesoService(memAcceso)
+	usuarioService := serviceAcceso.NewUsuarioService(memAcceso)
+	vehiculoService := serviceAcceso.NewVehiculoService(memAcceso)
+	puntoAccesoService := serviceAcceso.NewPuntoAccesoService(memAcceso)
 
 	// =========================
 	// SERVERS
@@ -107,6 +125,14 @@ func main() {
 		solicitudService,
 	)
 
+	accesoServer := handlerAcceso.NewServer(
+		authService,
+		accesoService,
+		usuarioService,
+		vehiculoService,
+		puntoAccesoService,
+	)
+
 	// =========================
 	// ROUTER
 	// =========================
@@ -117,9 +143,9 @@ func main() {
 
 	r.Route("/api/v1", func(r chi.Router) {
 
-		// AUTH (usa parqueadero)
-		r.Post("/auth/register", parqueaderoServer.Registrar)
-		r.Post("/auth/login", parqueaderoServer.Login)
+		// AUTH (usa el módulo de acceso)
+		r.Post("/auth/register", accesoServer.Registrar)
+		r.Post("/auth/login", accesoServer.Login)
 
 		// PROTEGIDAS PARQUEADERO
 		r.Group(func(r chi.Router) {
@@ -145,7 +171,7 @@ func main() {
 			r.Patch("/ocupaciones/{id}/liberar", parqueaderoServer.LiberarOcupacion)
 		})
 
-		// TRANSPORTE (sin auth o con auth si quieres)
+		// TRANSPORTE
 		r.Group(func(r chi.Router) {
 
 			r.Get("/rutas", transporteServer.ListarRutas)
@@ -172,6 +198,35 @@ func main() {
 
 			r.Get("/solicitudes", transporteServer.ListarSolicitudes)
 			r.Post("/solicitudes", transporteServer.CrearSolicitud)
+		})
+
+		// PROTEGIDAS ACCESO
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(authService))
+
+			r.Get("/usuarios", accesoServer.ListarUsuarios)
+			r.Post("/usuarios", accesoServer.CrearUsuario)
+			r.Get("/usuarios/{id}", accesoServer.ObtenerUsuario)
+			r.Put("/usuarios/{id}", accesoServer.ActualizarUsuario)
+			r.Delete("/usuarios/{id}", accesoServer.BorrarUsuario)
+
+			r.Get("/vehiculos", accesoServer.ListarVehiculos)
+			r.Post("/vehiculos", accesoServer.CrearVehiculo)
+			r.Get("/vehiculos/{placa}", accesoServer.ObtenerVehiculo)
+			r.Put("/vehiculos/{placa}", accesoServer.ActualizarVehiculo)
+			r.Delete("/vehiculos/{placa}", accesoServer.BorrarVehiculo)
+
+			r.Get("/puntos-acceso", accesoServer.ListarPuntosAcceso)
+			r.Post("/puntos-acceso", accesoServer.CrearPuntoAcceso)
+			r.Get("/puntos-acceso/{id}", accesoServer.ObtenerPuntoAcceso)
+			r.Put("/puntos-acceso/{id}", accesoServer.ActualizarPuntoAcceso)
+			r.Delete("/puntos-acceso/{id}", accesoServer.BorrarPuntoAcceso)
+
+			r.Get("/accesos", accesoServer.ListarAccesos)
+			r.Post("/accesos", accesoServer.CrearAcceso)
+			r.Get("/accesos/{id}", accesoServer.ObtenerAcceso)
+			r.Put("/accesos/{id}", accesoServer.ActualizarAcceso)
+			r.Delete("/accesos/{id}", accesoServer.BorrarAcceso)
 		})
 	})
 

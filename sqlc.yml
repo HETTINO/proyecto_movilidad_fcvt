@@ -16,3 +16,13 @@ sql:
       go:
         package: "sqlcdb_transporte"
         out: "internal/storage/sqlcdb_transporte"
+
+  - engine: "sqlite"
+    schema: "internal/db/db_acceso/schema.sql"
+    queries: "internal/db/db_acceso"
+    gen:
+      go:
+        package: "sqlcdb_acceso"
+        out: "internal/storage/sqlcdb_acceso"
+        emit_json_tags: true
+        emit_prepared_queries: false
