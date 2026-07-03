@@ -217,9 +217,9 @@ func (a *AlmacenSQLite) SembrarSiVacio() {
 
 	// Crear carritos
 	carritos := []modelos.Carrito{
-		{ID: 1, NombreCarrito: "Carrito A", Capacidad: 20, Estado: "disponible", RutaID: 1},
-		{ID: 2, NombreCarrito: "Carrito B", Capacidad: 15, Estado: "disponible", RutaID: 1},
-		{ID: 3, NombreCarrito: "Carrito C", Capacidad: 25, Estado: "disponible", RutaID: 2},
+		{ID: 1, NombreCarrito: "Carrito A", Capacidad: 5, Estado: "disponible", RutaID: 1},
+		{ID: 2, NombreCarrito: "Carrito B", Capacidad: 5, Estado: "disponible", RutaID: 1},
+		{ID: 3, NombreCarrito: "Carrito C", Capacidad: 3, Estado: "disponible", RutaID: 2},
 	}
 	a.db.Create(&carritos)
 
