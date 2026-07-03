@@ -225,16 +225,17 @@ func (a *AlmacenSQLite) SembrarSiVacio() {
 
 	// Crear paradas
 	paradas := []modelos.Parada{
-		{IDParada: 1, Nombre: "Parada Central", Latitud: -0.9281, Longitud: -78.6245},
-		{IDParada: 2, Nombre: "Parada Norte", Latitud: -0.8950, Longitud: -78.6200},
-		{IDParada: 3, Nombre: "Parada Sur", Latitud: -0.9500, Longitud: -78.6300},
-	}
-	a.db.Create(&paradas)
+    {IDParada: 1, Nombre: "Parada Facultad de Ciencias Informáticas", Latitud: -0.9521, Longitud: -80.7485},
+    {IDParada: 2, Nombre: "Parada Paraninfo Universitario", Latitud: -0.9505, Longitud: -80.7490},
+    {IDParada: 3, Nombre: "Parada Plaza Centenaria", Latitud: -0.9535, Longitud: -80.7502},
+    {IDParada: 4, Nombre: "Parada Comedor Tasty", Latitud: -0.9542, Longitud: -80.7515},
+}
+a.db.Create(&paradas)
 
 	// Crear solicitudes
 	solicitudes := []modelos.Solicitud{
 		{ID: 1, CedulaUsuario: "1234567890", CantPersonas: 3, ParadaOrigen: 1, PuntoDestino: "Biblioteca", Estado: "pendiente"},
-		{ID: 2, CedulaUsuario: "0987654321", CantPersonas: 2, ParadaOrigen: 2, PuntoDestino: "Hospital", Estado: "asignada"},
+		{ID: 2, CedulaUsuario: "0987654321", CantPersonas: 2, ParadaOrigen: 2, PuntoDestino: "Departamento de bienestar", Estado: "asignada"},
 	}
 	a.db.Create(&solicitudes)
 }
