@@ -1,4 +1,4 @@
-package handlers_test
+package handlers
 
 import (
 	"net/http"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	ht "proyecto_movilidad_fcvt/internal/handlers/handler_transporte"
 	mw "proyecto_movilidad_fcvt/internal/middleware"
 	st "proyecto_movilidad_fcvt/internal/service/service_transporte"
 	storage "proyecto_movilidad_fcvt/internal/storage/storage_transporte"
@@ -33,7 +32,7 @@ func construirEntorno(t *testing.T) http.Handler {
 	locacionSvc := st.NewLocacionService(mem)
 	solicitudSvc := st.NewSolicitudService(mem)
 
-	srv := ht.NewServer(ht.Deps{
+	srv := NewServer(Deps{
 		Ruta:      rutaSvc,
 		Carrito:   carritoSvc,
 		Parada:    paradaSvc,

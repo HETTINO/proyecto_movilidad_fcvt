@@ -13,20 +13,18 @@ import (
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
 )
 
-func TestCrearSolicitud_Exitoso(t *testing.T) {
+func TestCrearRuta_Exitoso(t *testing.T) {
 
 	h := construirEntorno(t)
 
 	body := `{
-		"cedula_usuario":"0102030405",
-		"cant_personas":2,
-		"parada_origen":1,
-		"punto_destino":"Biblioteca"
+		"nombre":"Ruta Centro",
+		"descripcion":"Recorrido por el centro"
 	}`
 
 	req := httptest.NewRequest(
 		http.MethodPost,
-		"/api/v1/solicitudes",
+		"/api/v1/rutas",
 		strings.NewReader(body),
 	)
 	req.Header.Set("Authorization", "Bearer test_token")
@@ -37,21 +35,21 @@ func TestCrearSolicitud_Exitoso(t *testing.T) {
 
 	require.Equal(t, http.StatusCreated, rec.Code)
 
-	var creada modelos.Solicitud
+	var creada modelos.Ruta
 
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&creada))
 
 	assert.NotZero(t, creada.ID)
-	assert.Equal(t, "pendiente", creada.Estado)
+	assert.Equal(t, "Ruta Centro", creada.Nombre)
 }
 
-func TestObtenerSolicitud_NoEncontrado(t *testing.T) {
+func TestObtenerRuta_NoEncontrado(t *testing.T) {
 
 	h := construirEntorno(t)
 
 	req := httptest.NewRequest(
 		http.MethodGet,
-		"/api/v1/solicitudes/9999",
+		"/api/v1/rutas/9999",
 		nil,
 	)
 
