@@ -33,13 +33,13 @@ func construirEntorno(t *testing.T) http.Handler {
 	locacionSvc := st.NewLocacionService(mem)
 	solicitudSvc := st.NewSolicitudService(mem)
 
-	srv := ht.NewServer(
-		rutaSvc,
-		carritoSvc,
-		paradaSvc,
-		locacionSvc,
-		solicitudSvc,
-	)
+	srv := ht.NewServer(ht.Deps{
+		Ruta:      rutaSvc,
+		Carrito:   carritoSvc,
+		Parada:    paradaSvc,
+		Locacion:  locacionSvc,
+		Solicitud: solicitudSvc,
+	})
 
 	r := chi.NewRouter()
 

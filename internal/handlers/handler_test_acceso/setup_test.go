@@ -38,13 +38,13 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 
 	// El orden debe coincidir exactamente con la firma de ha.NewServer:
 	// (auth, acceso, usuario, vehiculo, puntoAcceso)
-	srv := ha.NewServer(
-		authSvc,
-		accesoSvc,
-		usuarioSvc,
-		vehiculoSvc,
-		puntoAccesoSvc,
-	)
+	srv := ha.NewServer(ha.Deps{
+		Auth:        authSvc,
+		Acceso:      accesoSvc,
+		Usuario:     usuarioSvc,
+		Vehiculo:    vehiculoSvc,
+		PuntoAcceso: puntoAccesoSvc,
+	})
 
 	r := chi.NewRouter()
 

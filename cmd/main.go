@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/glebarez/sqlite"
@@ -28,14 +31,17 @@ import (
 	storageAcceso "proyecto_movilidad_fcvt/internal/storage/storage_acceso"
 
 	// Compartidos
+	"proyecto_movilidad_fcvt/internal/config"
+	"proyecto_movilidad_fcvt/internal/httpserver"
 	"proyecto_movilidad_fcvt/internal/middleware"
 	"proyecto_movilidad_fcvt/internal/service"
 )
 
 func main() {
+	cfg := config.Cargar()
 
 	// DB GORM
-	gdb, err := gorm.Open(sqlite.Open("parqueadero.db"), &gorm.Config{})
+	gdb, err := gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
 	if err != nil {
 		log.Fatal("no se pudo abrir la base de datos: ", err)
 	}
@@ -84,7 +90,10 @@ func main() {
 	// =========================
 	// SERVICIOS PARQUEADERO
 	// =========================
-	authService := service.NewAuthService(memAcceso)
+	authService := service.NewAuthService(memAcceso,
+		service.WithSecreto(cfg.JWTSecreto),
+		service.WithDuracion(cfg.JWTDuracion),
+	)
 
 	parqueaderoService := serviceParqueadero.NewParqueaderoService(memParqueadero)
 	espacioService := serviceParqueadero.NewEspacioService(memParqueadero)
@@ -110,28 +119,28 @@ func main() {
 	// =========================
 	// SERVERS
 	// =========================
-	parqueaderoServer := handlerParqueadero.NewServer(
-		parqueaderoService,
-		espacioService,
-		ocupacionService,
-		authService,
-	)
+	parqueaderoServer := handlerParqueadero.NewServer(handlerParqueadero.Deps{
+		Parqueadero: parqueaderoService,
+		Espacio:     espacioService,
+		Ocupacion:   ocupacionService,
+		Auth:        authService,
+	})
 
-	transporteServer := handlerTransporte.NewServer(
-		rutaService,
-		carritoService,
-		paradaService,
-		locacionService,
-		solicitudService,
-	)
+	transporteServer := handlerTransporte.NewServer(handlerTransporte.Deps{
+		Ruta:      rutaService,
+		Carrito:   carritoService,
+		Parada:    paradaService,
+		Locacion:  locacionService,
+		Solicitud: solicitudService,
+	})
 
-	accesoServer := handlerAcceso.NewServer(
-		authService,
-		accesoService,
-		usuarioService,
-		vehiculoService,
-		puntoAccesoService,
-	)
+	accesoServer := handlerAcceso.NewServer(handlerAcceso.Deps{
+		Auth:        authService,
+		Acceso:      accesoService,
+		Usuario:     usuarioService,
+		Vehiculo:    vehiculoService,
+		PuntoAcceso: puntoAccesoService,
+	})
 
 	// =========================
 	// ROUTER
@@ -230,6 +239,9 @@ func main() {
 		})
 	})
 
-	log.Println("Servidor escuchando en http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	servidor := httpserver.Nuevo(cfg.Puerto, r)
+	servidor.IniciarConGracefulShutdown(ctx, 10*time.Second)
 }

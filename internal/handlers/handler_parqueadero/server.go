@@ -12,16 +12,20 @@ type Server struct {
 	Auth        *service.AuthService
 }
 
-func NewServer(
-	parqueadero *sp.ParqueaderoService,
-	espacio *sp.EspacioService,
-	ocupacion *sp.OcupacionService,
-	auth *service.AuthService,
-) *Server {
+// Deps agrupa las dependencias OBLIGATORIAS de este servidor.
+// Agregar una entidad nueva = un campo aquí, no un parámetro más.
+type Deps struct {
+	Parqueadero *sp.ParqueaderoService
+	Espacio     *sp.EspacioService
+	Ocupacion   *sp.OcupacionService
+	Auth        *service.AuthService
+}
+
+func NewServer(d Deps) *Server {
 	return &Server{
-		Parqueadero: parqueadero,
-		Espacio:     espacio,
-		Ocupacion:   ocupacion,
-		Auth:        auth,
+		Parqueadero: d.Parqueadero,
+		Espacio:     d.Espacio,
+		Ocupacion:   d.Ocupacion,
+		Auth:        d.Auth,
 	}
 }

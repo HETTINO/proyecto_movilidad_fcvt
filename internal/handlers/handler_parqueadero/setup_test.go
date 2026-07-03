@@ -38,12 +38,12 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 
 	authSvc := service.NewAuthService(usuarios)
 
-	srv := hp.NewServer(
-		parqueaderoSvc,
-		espacioSvc,
-		ocupacionSvc,
-		authSvc,
-	)
+	srv := hp.NewServer(hp.Deps{
+		Parqueadero: parqueaderoSvc,
+		Espacio:     espacioSvc,
+		Ocupacion:   ocupacionSvc,
+		Auth:        authSvc,
+	})
 
 	r := chi.NewRouter()
 

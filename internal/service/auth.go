@@ -10,9 +10,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var secretJWT = []byte("cualquier_cosa_secreta")
+// valores por defecto: se usan si nadie pasa una Option
+var secretoPorDefecto = []byte("cualquier_cosa_secreta")
 
-const duracionToken = 24 * time.Hour
+const duracionPorDefecto = 24 * time.Hour
 
 type Claims struct {
 	Cedula string `json:"cedula"` // Usamos la Cédula como identificador en tu módulo
@@ -20,11 +21,45 @@ type Claims struct {
 }
 
 type AuthService struct {
-	repo storage_acceso.UsuarioRepository
+	repo        storage_acceso.UsuarioRepository
+	secretoJWT  []byte
+	duracionJWT time.Duration
 }
 
-func NewAuthService(repo storage_acceso.UsuarioRepository) *AuthService {
-	return &AuthService{repo: repo}
+// AuthOption configura parámetros OPCIONALES de AuthService.
+type AuthOption func(*AuthService)
+
+// WithSecreto permite inyectar el secreto JWT (p.ej. desde config/.env)
+// en vez de usar el valor global hardcodeado.
+func WithSecreto(secreto []byte) AuthOption {
+	return func(s *AuthService) {
+		if len(secreto) > 0 {
+			s.secretoJWT = secreto
+		}
+	}
+}
+
+// WithDuracion permite configurar cuánto dura el token.
+func WithDuracion(d time.Duration) AuthOption {
+	return func(s *AuthService) {
+		if d > 0 {
+			s.duracionJWT = d
+		}
+	}
+}
+
+// NewAuthService sigue aceptando NewAuthService(repo) sin romper nada:
+// opts es variádico, así que las llamadas existentes compilan igual.
+func NewAuthService(repo storage_acceso.UsuarioRepository, opts ...AuthOption) *AuthService {
+	s := &AuthService{
+		repo:        repo,
+		secretoJWT:  secretoPorDefecto,
+		duracionJWT: duracionPorDefecto,
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *AuthService) Registrar(cedula, nombre, email, password, rol string) (modelos.Usuario, error) {
@@ -81,12 +116,12 @@ func (s *AuthService) generarToken(u modelos.Usuario) (string, error) {
 	claims := &Claims{
 		Cedula: u.Cedula,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duracionToken)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.duracionJWT)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secretJWT)
+	return token.SignedString(s.secretoJWT)
 }
 
 func (s *AuthService) ValidarToken(tokenStr string) (string, error) {
@@ -94,7 +129,7 @@ func (s *AuthService) ValidarToken(tokenStr string) (string, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrCredencialesInvalidas
 		}
-		return secretJWT, nil
+		return s.secretoJWT, nil
 	})
 	if err != nil || !token.Valid {
 		return "", ErrCredencialesInvalidas
