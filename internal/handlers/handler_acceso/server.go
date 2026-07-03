@@ -1,4 +1,4 @@
-package handlers
+package handler_acceso
 
 import (
 	"proyecto_movilidad_fcvt/internal/service"
