@@ -11,12 +11,11 @@ type Parqueadero struct {
 }
 
 type Espacio struct {
-	IDEspacio     int         `gorm:"primaryKey;autoIncrement" json:"id_espacio"`
-	IDParqueadero int         `gorm:"not null" json:"id_parqueadero"`
-	Numero        int         `gorm:"not null" json:"numero"`
-	Estado        string      `gorm:"not null" json:"estado"`
-	TipoEspacio   string      `gorm:"not null" json:"tipo_espacio"`
-	Parqueadero   Parqueadero `gorm:"foreignKey:IDParqueadero"`
+	IDEspacio     int    `gorm:"primaryKey;autoIncrement" json:"id_espacio"`
+	IDParqueadero int    `gorm:"not null" json:"id_parqueadero"`
+	Numero        int    `gorm:"not null" json:"numero"`
+	Estado        string `gorm:"not null" json:"estado"`
+	TipoEspacio   string `gorm:"not null" json:"tipo_espacio"`
 }
 
 type Ocupacion struct {
@@ -26,5 +25,4 @@ type Ocupacion struct {
 	IDAcceso      int        `gorm:"not null" json:"id_acceso"`
 	HoraInicio    time.Time  `gorm:"not null" json:"hora_inicio"`
 	HoraFin       *time.Time `json:"hora_fin,omitempty"`
-	Espacio       Espacio    `gorm:"foreignKey:IDEspacio"`
 }

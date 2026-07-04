@@ -11,6 +11,7 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	// Parqueadero
@@ -40,8 +41,16 @@ import (
 func main() {
 	cfg := config.Cargar()
 
-	// DB GORM
-	gdb, err := gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+	// DB GORM: elegimos el dialector según DB_DRIVER (sqlite local o postgres en docker)
+	var gdb *gorm.DB
+	var err error
+
+	switch cfg.DBDriver {
+	case "postgres":
+		gdb, err = gorm.Open(postgres.Open(cfg.PostgresDSN), &gorm.Config{})
+	default: // "sqlite" o cualquier valor no reconocido
+		gdb, err = gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+	}
 	if err != nil {
 		log.Fatal("no se pudo abrir la base de datos: ", err)
 	}
@@ -86,6 +95,7 @@ func main() {
 	// STORAGE ACCESO (sqlite + gorm)
 	// =========================
 	memAcceso := storageAcceso.NuevoAlmacenSQLite(gdb)
+	memAcceso.SembrarSiVacio()
 
 	// =========================
 	// SERVICIOS PARQUEADERO
