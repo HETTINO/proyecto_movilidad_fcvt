@@ -1,10 +1,12 @@
 package serviceparqueadero_test
+
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"proyecto_movilidad_fcvt/internal/modelos"
+	service "proyecto_movilidad_fcvt/internal/service"
 	sp "proyecto_movilidad_fcvt/internal/service/service_parqueadero"
 )
 
@@ -130,4 +132,74 @@ func TestEspacioService_Obtener_Exitoso(t *testing.T) {
 
 	repo.AssertExpectations(t)
 
+}
+
+func TestEspacioService_Actualizar_Exitoso(t *testing.T) {
+	repo := new(espacioRepoMock)
+	datos := modelos.Espacio{IDParqueadero: 1, Numero: 5, Estado: "ocupado"}
+	actualizado := datos
+	actualizado.IDEspacio = 1
+
+	repo.On("ActualizarEspacio", 1, datos).Return(actualizado, true)
+
+	svc := sp.NewEspacioService(repo)
+	resultado, ok, err := svc.Actualizar(1, datos)
+
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, "ocupado", resultado.Estado)
+}
+
+func TestEspacioService_Actualizar_NoEncontrado(t *testing.T) {
+	repo := new(espacioRepoMock)
+	datos := modelos.Espacio{IDParqueadero: 1}
+	repo.On("ActualizarEspacio", 999, datos).Return(modelos.Espacio{}, false)
+
+	svc := sp.NewEspacioService(repo)
+	_, ok, err := svc.Actualizar(999, datos)
+
+	assert.False(t, ok)
+	assert.ErrorIs(t, err, service.ErrNoEncontrado)
+}
+
+func TestEspacioService_Actualizar_IDParqueaderoVacio(t *testing.T) {
+	repo := new(espacioRepoMock)
+	svc := sp.NewEspacioService(repo)
+
+	_, ok, err := svc.Actualizar(1, modelos.Espacio{IDParqueadero: 0})
+
+	assert.False(t, ok)
+	assert.ErrorIs(t, err, service.ErrCampoRequerido)
+	repo.AssertNotCalled(t, "ActualizarEspacio", 1, modelos.Espacio{})
+}
+
+func TestEspacioService_Borrar_Exitoso(t *testing.T) {
+	repo := new(espacioRepoMock)
+	repo.On("BorrarEspacio", 1).Return(true)
+
+	svc := sp.NewEspacioService(repo)
+	err := svc.Borrar(1)
+
+	assert.NoError(t, err)
+}
+
+func TestEspacioService_Borrar_NoEncontrado(t *testing.T) {
+	repo := new(espacioRepoMock)
+	repo.On("BorrarEspacio", 999).Return(false)
+
+	svc := sp.NewEspacioService(repo)
+	err := svc.Borrar(999)
+
+	assert.ErrorIs(t, err, service.ErrNoEncontrado)
+}
+
+func TestEspacioService_Listar(t *testing.T) {
+	repo := new(espacioRepoMock)
+	esperado := []modelos.Espacio{{IDEspacio: 1, IDParqueadero: 1}}
+	repo.On("ListarEspacios").Return(esperado)
+
+	svc := sp.NewEspacioService(repo)
+	resultado := svc.Listar()
+
+	assert.Equal(t, esperado, resultado)
 }

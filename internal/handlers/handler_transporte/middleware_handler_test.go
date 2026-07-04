@@ -11,7 +11,7 @@ import (
 
 func TestRutaProtegida_SinToken(t *testing.T) {
 
-	h := construirEntorno(t)  // ← Solo 1 valor
+	h := construirEntorno(t) // ← Solo 1 valor
 
 	req := httptest.NewRequest(
 		http.MethodPost,

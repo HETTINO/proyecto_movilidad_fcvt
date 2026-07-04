@@ -1,4 +1,5 @@
 package handler_parqueadero_test
+
 import (
 	"encoding/json"
 	"net/http"
@@ -57,6 +58,60 @@ func TestObtenerEspacio_NoEncontrado(t *testing.T) {
 
 	req.Header.Set("Authorization", "Bearer "+token)
 
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestActualizarEspacio_Exitoso(t *testing.T) {
+	h, token := construirEntorno(t)
+
+	body := `{"id_parqueadero":1,"numero":1,"estado":"ocupado","tipo_espacio":"auto"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/espacios/1", strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var actualizado modelos.Espacio
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&actualizado))
+	assert.Equal(t, "ocupado", actualizado.Estado)
+}
+
+func TestActualizarEspacio_NoEncontrado(t *testing.T) {
+	h, token := construirEntorno(t)
+
+	body := `{"id_parqueadero":1,"numero":1,"estado":"libre"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/espacios/9999", strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestBorrarEspacio_Exitoso(t *testing.T) {
+	h, token := construirEntorno(t)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/espacios/3", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+}
+
+func TestBorrarEspacio_NoEncontrado(t *testing.T) {
+	h, token := construirEntorno(t)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/espacios/9999", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
 
 	h.ServeHTTP(rec, req)
