@@ -8,5 +8,4 @@ cafeteria-api
 coverage.html
 README.md
 SETUP-GIT.md
-Dockerfile
 docker-compose.yml
