@@ -96,6 +96,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./dockerfile
+          file: ./Dockerfile
           push: false
           tags: proyecto_movilidad_fcvt:ci
