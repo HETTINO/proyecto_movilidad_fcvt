@@ -1,0 +1,39 @@
+# Orquesta dos servicios: la API (compilada con el Dockerfile) y Postgres.
+# La API espera a que la base esté "healthy" antes de arrancar.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: movilidad
+      POSTGRES_PASSWORD: movilidad
+      POSTGRES_DB: movilidad_fcvt
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volumen nombrado: los datos sobreviven a "docker compose down" (sin -v)
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movilidad -d movilidad_fcvt"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    container_name: movilidad_fcvt_api
+    environment:
+      PUERTO: "8080"
+      # DB_DRIVER y POSTGRES_DSN son los nombres reales que lee config.go
+      DB_DRIVER: postgres
+      POSTGRES_DSN: "host=db user=movilidad password=movilidad dbname=movilidad_fcvt port=5432 sslmode=disable TimeZone=America/Guayaquil"
+      JWT_SECRETO: "cambia-esto-en-produccion"
+      JWT_DURACION: "24h"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  dbdata:
