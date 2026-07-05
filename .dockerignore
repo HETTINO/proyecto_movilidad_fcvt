@@ -5,6 +5,4 @@
 *.db-journal
 *.out
 coverage.html
-README.md
 SETUP-GIT.md
-docker-compose.yml
