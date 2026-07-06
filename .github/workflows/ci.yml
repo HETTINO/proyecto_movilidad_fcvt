@@ -5,7 +5,6 @@ name: CI
 # actualiza con código que no compila o no pasa pruebas.
 on:
   push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
 
