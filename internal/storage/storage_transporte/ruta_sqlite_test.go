@@ -7,35 +7,40 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSQLite_CrearYListarRutas(t *testing.T) {
+func TestSQLite_CrearRuta(t *testing.T) {
 	repo := nuevoRepo(t)
-
-	// Crear una ruta de prueba
 	ruta := modelos.Ruta{
 		Nombre:      "Ruta: Facultad FCVT - Tasty",
 		Descripcion: "Recorrido desde la Facultad de Ciencias Informáticas hacia el Tasty",
 	}
-	repo.CrearRuta(ruta)
 
-	// Verificar listado
-	lista := repo.ListarRutas()
-	assert.Len(t, lista, 1)
-	assert.Equal(t, "Ruta: Facultad FCVT - Tasty", lista[0].Nombre)
+	creada := repo.CrearRuta(ruta)
+
+	assert.NotZero(t, creada.ID)
+	assert.Equal(t, "Ruta: Facultad FCVT - Tasty", creada.Nombre)
 }
 
-func TestSQLite_CrearYBuscarRutaPorID(t *testing.T) {
+func TestSQLite_ListarRutas(t *testing.T) {
 	repo := nuevoRepo(t)
+	repo.CrearRuta(modelos.Ruta{Nombre: "Ruta 1"})
+	repo.CrearRuta(modelos.Ruta{Nombre: "Ruta 2"})
 
-	// Crear
+	lista := repo.ListarRutas()
+
+	assert.Len(t, lista, 2)
+}
+
+func TestSQLite_BuscarRutaPorID(t *testing.T) {
+	repo := nuevoRepo(t)
 	ruta := repo.CrearRuta(modelos.Ruta{
 		Nombre:      "Ruta: Paraninfo - Facultad de Ingeniería",
 		Descripcion: "Conexión entre el centro de eventos y el bloque de aulas",
 	})
 
-	// Buscar
 	encontrado, ok := repo.BuscarRutaPorID(ruta.ID)
 
 	assert.True(t, ok)
+	assert.Equal(t, ruta.ID, encontrado.ID)
 	assert.Equal(t, "Ruta: Paraninfo - Facultad de Ingeniería", encontrado.Nombre)
 }
 

@@ -8,23 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSQLite_RegistrarYListarLocaciones(t *testing.T) {
+func TestSQLite_RegistrarLocacion(t *testing.T) {
 	repo := nuevoRepo(t)
-
-	// Registrar una locación (ej. Carrito en Paraninfo)
 	loc := modelos.Locacion{
 		Latitud:   -0.950,
 		Longitud:  -80.750,
 		TimeStamp: time.Now(),
 		CarritoID: 1,
 	}
-	repo.RegistrarLocacion(loc)
 
-	// Verificar listado
+	registrada := repo.RegistrarLocacion(loc)
+
+	assert.NotZero(t, registrada.ID)
+	assert.Equal(t, loc.Latitud, registrada.Latitud)
+}
+
+func TestSQLite_ListarLocaciones(t *testing.T) {
+	repo := nuevoRepo(t)
+	repo.RegistrarLocacion(modelos.Locacion{CarritoID: 1})
+	repo.RegistrarLocacion(modelos.Locacion{CarritoID: 2})
+
 	lista := repo.ListarLocaciones()
-	assert.Len(t, lista, 1)
-	assert.Equal(t, -0.950, lista[0].Latitud)
-	assert.Equal(t, 1, lista[0].CarritoID)
+
+	assert.Len(t, lista, 2)
 }
 
 func TestSQLite_ObtenerUltimaLocacionPorCarrito(t *testing.T) {
