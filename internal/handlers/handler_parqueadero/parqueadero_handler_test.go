@@ -34,7 +34,7 @@ func TestCrearParqueadero(t *testing.T) {
 
 	hp.ServeHTTP(rec, req)
 
-	require.Equal(t, http.StatusTeapod, rec.Code)
+	require.Equal(t, http.StatusCreated, rec.Code)
 }
 
 func TestCrearParqueadero_Exitoso(t *testing.T) {
