@@ -33,7 +33,7 @@ func TestCrearAcceso_Exitoso(t *testing.T) {
 
 	h.ServeHTTP(rec, req)
 
-	require.Equal(t, http.StatusTeaut, rec.Code)
+	require.Equal(t, http.StatusCreated, rec.Code)
 
 	var creado modelos.Acceso
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&creado))
