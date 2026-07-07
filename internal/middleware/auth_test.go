@@ -170,3 +170,73 @@ func TestRequireAuth_ConToken_PermiteElPaso(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
+// =========================================================
+// TESTS — RequireRol (autorización por rol, se encadena
+// después de Auth)
+// =========================================================
+
+// generarTokenConRol es igual a generarToken pero permite fijar el rol,
+// necesario para probar RequireRol de forma aislada.
+func generarTokenConRol(t *testing.T, cedula, rol string, vencidoHace time.Duration) string {
+	t.Helper()
+
+	claims := &service.Claims{
+		Cedula: cedula,
+		Rol:    rol,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(vencidoHace)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	firmado, err := token.SignedString([]byte(secretoDePrueba))
+	assert.NoError(t, err)
+	return firmado
+}
+
+func TestRequireRol_RolPermitido_PermiteElPaso(t *testing.T) {
+	auth := construirAuthService()
+	token := generarTokenConRol(t, "1300000000", "admin", time.Hour)
+
+	// Cadena real: primero Auth (inyecta el rol), luego RequireRol
+	mw := middleware.Auth(auth)(middleware.RequireRol("admin")(handlerDePrueba()))
+
+	req := httptest.NewRequest(http.MethodDelete, "/usuarios/1", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	mw.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestRequireRol_RolNoPermitido_Rechaza(t *testing.T) {
+	auth := construirAuthService()
+	token := generarTokenConRol(t, "1300000000", "usuario", time.Hour)
+
+	mw := middleware.Auth(auth)(middleware.RequireRol("admin")(handlerDePrueba()))
+
+	req := httptest.NewRequest(http.MethodDelete, "/usuarios/1", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	mw.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestRequireRol_AceptaVariosRolesPermitidos(t *testing.T) {
+	auth := construirAuthService()
+	token := generarTokenConRol(t, "1300000000", "supervisor", time.Hour)
+
+	mw := middleware.Auth(auth)(middleware.RequireRol("admin", "supervisor")(handlerDePrueba()))
+
+	req := httptest.NewRequest(http.MethodDelete, "/usuarios/1", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	mw.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
