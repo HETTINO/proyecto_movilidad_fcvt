@@ -6,7 +6,7 @@ type ParqueaderoRepository interface {
 	// Parqueaderos
 	ListarParqueaderos() []modelos.Parqueadero
 	BuscarParqueaderoPorID(id int) (modelos.Parqueadero, bool)
-	CrearParqueadero(p modelos.Parqueadero) modelos.Parqueadero
+	CrearParqueadero(p modelos.Parqueadero) (modelos.Parqueadero, error)
 	ActualizarParqueadero(id int, datos modelos.Parqueadero) (modelos.Parqueadero, bool)
 	BorrarParqueadero(id int) bool
 }

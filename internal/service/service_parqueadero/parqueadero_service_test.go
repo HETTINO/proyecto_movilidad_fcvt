@@ -41,7 +41,7 @@ func TestParqueaderoService_Crear(t *testing.T) {
 
 				repo.
 					On("CrearParqueadero", c.entrada).
-					Return(guardado)
+					Return(guardado, nil)
 			}
 
 			svc := sp.NewParqueaderoService(repo)

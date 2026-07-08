@@ -9,7 +9,7 @@ import (
 
 func TestSQLite_CrearYListarEspacio(t *testing.T) {
 	repo := nuevoRepo(t)
-	park := repo.CrearParqueadero(modelos.Parqueadero{
+	park, _ := repo.CrearParqueadero(modelos.Parqueadero{
 		Nombre: "Parqueadero Central", Capacidad: 20, Tipo: "cubierto",
 	})
 	repo.CrearEspacio(modelos.Espacio{
@@ -23,7 +23,7 @@ func TestSQLite_CrearYListarEspacio(t *testing.T) {
 
 func TestSQLite_CrearYBuscarEspacioPorID(t *testing.T) {
 	repo := nuevoRepo(t)
-	park := repo.CrearParqueadero(modelos.Parqueadero{
+	park, _ := repo.CrearParqueadero(modelos.Parqueadero{
 		Nombre: "Parqueadero Este", Capacidad: 10, Tipo: "abierto",
 	})
 	creado := repo.CrearEspacio(modelos.Espacio{
@@ -45,8 +45,8 @@ func TestSQLite_BuscarEspacioInexistente(t *testing.T) {
 
 func TestSQLite_ListarEspaciosPorParqueadero(t *testing.T) {
 	repo := nuevoRepo(t)
-	park1 := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "Norte", Capacidad: 10, Tipo: "cubierto"})
-	park2 := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "Sur", Capacidad: 10, Tipo: "abierto"})
+	park1, _ := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "Norte", Capacidad: 10, Tipo: "cubierto"})
+	park2, _ := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "Sur", Capacidad: 10, Tipo: "abierto"})
 	repo.CrearEspacio(modelos.Espacio{IDParqueadero: park1.IDParqueadero, Numero: 1, Estado: "libre", TipoEspacio: "auto"})
 	repo.CrearEspacio(modelos.Espacio{IDParqueadero: park1.IDParqueadero, Numero: 2, Estado: "libre", TipoEspacio: "moto"})
 	repo.CrearEspacio(modelos.Espacio{IDParqueadero: park2.IDParqueadero, Numero: 1, Estado: "libre", TipoEspacio: "auto"})

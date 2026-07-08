@@ -19,7 +19,7 @@ func TestSQLite_CrearYListarParqueadero(t *testing.T) {
 
 func TestSQLite_CrearYBuscarParqueaderoPorID(t *testing.T) {
 	repo := nuevoRepo(t)
-	creado := repo.CrearParqueadero(modelos.Parqueadero{
+	creado, _ := repo.CrearParqueadero(modelos.Parqueadero{
 		Nombre: "Parqueadero Sur", Capacidad: 30, Tipo: "abierto",
 	})
 	assert.NotZero(t, creado.IDParqueadero)
