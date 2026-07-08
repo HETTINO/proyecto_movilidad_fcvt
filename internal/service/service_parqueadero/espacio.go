@@ -7,11 +7,14 @@ import (
 )
 
 type EspacioService struct {
-	repo storage.EspacioRepository
+	repo          storage.EspacioRepository
+	ocupacionRepo storage.OcupacionesRepository
 }
 
-func NewEspacioService(repo storage.EspacioRepository) *EspacioService {
-	return &EspacioService{repo: repo}
+// NewEspacioService recibe además el repositorio de Ocupaciones, necesario
+// para validar integridad referencial antes de borrar un espacio.
+func NewEspacioService(repo storage.EspacioRepository, ocupacionRepo storage.OcupacionesRepository) *EspacioService {
+	return &EspacioService{repo: repo, ocupacionRepo: ocupacionRepo}
 }
 
 func (s *EspacioService) Listar() []modelos.Espacio {
@@ -41,6 +44,14 @@ func (s *EspacioService) Actualizar(id int, datos modelos.Espacio) (modelos.Espa
 }
 
 func (s *EspacioService) Borrar(id int) error {
+	if _, encontrado := s.repo.BuscarEspacioPorID(id); !encontrado {
+		return service.ErrNoEncontrado
+	}
+
+	if activas := s.ocupacionRepo.ListarOcupacionesActivas(id); len(activas) > 0 {
+		return service.ErrEspacioConOcupacionesActivas
+	}
+
 	if !s.repo.BorrarEspacio(id) {
 		return service.ErrNoEncontrado
 	}

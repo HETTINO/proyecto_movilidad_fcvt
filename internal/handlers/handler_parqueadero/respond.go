@@ -46,6 +46,9 @@ func statusDeError(err error) int {
 	case errors.Is(err, service.ErrNoEncontrado):
 		return http.StatusNotFound
 
+	case errors.Is(err, service.ErrEspacioConOcupacionesActivas):
+		return http.StatusConflict
+
 	default:
 		return http.StatusInternalServerError
 	}

@@ -87,7 +87,7 @@ func (s *Server) BorrarEspacio(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.Espacio.Borrar(id); err != nil {
-		responderError(w, http.StatusNotFound, err.Error())
+		responderError(w, statusDeError(err), err.Error())
 		return
 	}
 

@@ -17,6 +17,7 @@ const duracionPorDefecto = 24 * time.Hour
 
 type Claims struct {
 	Cedula string `json:"cedula"` // Usamos la Cédula como identificador en tu módulo
+	Rol    string `json:"rol"`    // Rol del usuario (ej. "admin", "usuario") para autorización
 	jwt.RegisteredClaims
 }
 
@@ -115,6 +116,7 @@ func (s *AuthService) Login(cedula, password string) (string, error) {
 func (s *AuthService) generarToken(u modelos.Usuario) (string, error) {
 	claims := &Claims{
 		Cedula: u.Cedula,
+		Rol:    u.Rol,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.duracionJWT)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -124,7 +126,19 @@ func (s *AuthService) generarToken(u modelos.Usuario) (string, error) {
 	return token.SignedString(s.secretoJWT)
 }
 
+// ValidarToken mantiene la firma original (solo cédula) para no romper
+// código existente que ya depende de ella.
 func (s *AuthService) ValidarToken(tokenStr string) (string, error) {
+	claims, err := s.ValidarTokenClaims(tokenStr)
+	if err != nil {
+		return "", err
+	}
+	return claims.Cedula, nil
+}
+
+// ValidarTokenClaims devuelve los claims completos (cédula + rol), necesarios
+// para el middleware de autorización por rol (RequireRol).
+func (s *AuthService) ValidarTokenClaims(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrCredencialesInvalidas
@@ -132,11 +146,11 @@ func (s *AuthService) ValidarToken(tokenStr string) (string, error) {
 		return s.secretoJWT, nil
 	})
 	if err != nil || !token.Valid {
-		return "", ErrCredencialesInvalidas
+		return nil, ErrCredencialesInvalidas
 	}
 	claims, ok := token.Claims.(*Claims)
 	if !ok {
-		return "", ErrCredencialesInvalidas
+		return nil, ErrCredencialesInvalidas
 	}
-	return claims.Cedula, nil
+	return claims, nil
 }

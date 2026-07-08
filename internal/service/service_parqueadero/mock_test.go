@@ -20,8 +20,10 @@ func (m *parqueaderoRepoMock) BuscarParqueaderoPorID(id int) (modelos.Parqueader
 	args := m.Called(id)
 	return args.Get(0).(modelos.Parqueadero), args.Bool(1)
 }
-func (m *parqueaderoRepoMock) CrearParqueadero(p modelos.Parqueadero) modelos.Parqueadero {
-	return m.Called(p).Get(0).(modelos.Parqueadero)
+func (m *parqueaderoRepoMock) CrearParqueadero(p modelos.Parqueadero) (modelos.Parqueadero, error) {
+	args := m.Called(p)
+	err, _ := args.Get(1).(error)
+	return args.Get(0).(modelos.Parqueadero), err
 }
 func (m *parqueaderoRepoMock) ActualizarParqueadero(id int, datos modelos.Parqueadero) (modelos.Parqueadero, bool) {
 	args := m.Called(id, datos)
@@ -59,6 +61,9 @@ func (m *ocupacionRepoMock) BorrarOcupacion(id int) bool {
 func (m *ocupacionRepoMock) LiberarOcupacion(id int) (modelos.Ocupacion, bool) {
 	args := m.Called(id)
 	return args.Get(0).(modelos.Ocupacion), args.Bool(1)
+}
+func (m *ocupacionRepoMock) ListarOcupacionesActivas(idEspacio int) []modelos.Ocupacion {
+	return m.Called(idEspacio).Get(0).([]modelos.Ocupacion)
 }
 
 var _ storage.OcupacionesRepository = (*ocupacionRepoMock)(nil)

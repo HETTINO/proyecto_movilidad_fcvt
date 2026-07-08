@@ -28,7 +28,7 @@ func (s *ParqueaderoService) Crear(p modelos.Parqueadero) (modelos.Parqueadero, 
 	if err := validarParqueadero(p); err != nil {
 		return modelos.Parqueadero{}, err
 	}
-	return s.repo.CrearParqueadero(p), nil
+	return s.repo.CrearParqueadero(p)
 }
 
 func (s *ParqueaderoService) Actualizar(id int, datos modelos.Parqueadero) (modelos.Parqueadero, bool, error) {

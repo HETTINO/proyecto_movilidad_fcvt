@@ -33,9 +33,11 @@ func (a *AlmacenSQLite) BuscarParqueaderoPorID(id int) (modelos.Parqueadero, boo
 	return p, true
 }
 
-func (a *AlmacenSQLite) CrearParqueadero(p modelos.Parqueadero) modelos.Parqueadero {
-	a.db.Create(&p)
-	return p
+func (a *AlmacenSQLite) CrearParqueadero(p modelos.Parqueadero) (modelos.Parqueadero, error) {
+	if err := a.db.Create(&p).Error; err != nil {
+		return modelos.Parqueadero{}, err
+	}
+	return p, nil
 }
 
 func (a *AlmacenSQLite) ActualizarParqueadero(id int, datos modelos.Parqueadero) (modelos.Parqueadero, bool) {
