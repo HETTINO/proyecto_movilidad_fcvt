@@ -33,7 +33,7 @@ func construirEntorno(t *testing.T) (http.Handler, string) {
 	usuarios := storageAcceso.NuevoMemoriaAcceso()
 
 	parqueaderoSvc := sp.NewParqueaderoService(mem)
-	espacioSvc := sp.NewEspacioService(mem)
+	espacioSvc := sp.NewEspacioService(mem, mem)
 	ocupacionSvc := sp.NewOcupacionService(mem)
 
 	authSvc := service.NewAuthService(usuarios)

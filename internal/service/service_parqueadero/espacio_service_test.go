@@ -60,7 +60,8 @@ func TestEspacioService_Crear(t *testing.T) {
 
 			}
 
-			svc := sp.NewEspacioService(repo)
+			ocupacionRepo := new(ocupacionRepoMock)
+			svc := sp.NewEspacioService(repo, ocupacionRepo)
 
 			creado, err := svc.Crear(c.entrada)
 
@@ -94,7 +95,7 @@ func TestEspacioService_Obtener_NoEncontrado(t *testing.T) {
 		On("BuscarEspacioPorID", 999).
 		Return(modelos.Espacio{}, false)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 
 	_, ok := svc.Obtener(999)
 
@@ -120,7 +121,7 @@ func TestEspacioService_Obtener_Exitoso(t *testing.T) {
 		On("BuscarEspacioPorID", 1).
 		Return(esperado, true)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 
 	resultado, ok := svc.Obtener(1)
 
@@ -142,7 +143,7 @@ func TestEspacioService_Actualizar_Exitoso(t *testing.T) {
 
 	repo.On("ActualizarEspacio", 1, datos).Return(actualizado, true)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 	resultado, ok, err := svc.Actualizar(1, datos)
 
 	assert.NoError(t, err)
@@ -155,7 +156,7 @@ func TestEspacioService_Actualizar_NoEncontrado(t *testing.T) {
 	datos := modelos.Espacio{IDParqueadero: 1}
 	repo.On("ActualizarEspacio", 999, datos).Return(modelos.Espacio{}, false)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 	_, ok, err := svc.Actualizar(999, datos)
 
 	assert.False(t, ok)
@@ -164,7 +165,7 @@ func TestEspacioService_Actualizar_NoEncontrado(t *testing.T) {
 
 func TestEspacioService_Actualizar_IDParqueaderoVacio(t *testing.T) {
 	repo := new(espacioRepoMock)
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 
 	_, ok, err := svc.Actualizar(1, modelos.Espacio{IDParqueadero: 0})
 
@@ -175,22 +176,53 @@ func TestEspacioService_Actualizar_IDParqueaderoVacio(t *testing.T) {
 
 func TestEspacioService_Borrar_Exitoso(t *testing.T) {
 	repo := new(espacioRepoMock)
+	ocupacionRepo := new(ocupacionRepoMock)
+
+	repo.On("BuscarEspacioPorID", 1).Return(modelos.Espacio{IDEspacio: 1}, true)
+	ocupacionRepo.On("ListarOcupacionesActivas", 1).Return([]modelos.Ocupacion{})
 	repo.On("BorrarEspacio", 1).Return(true)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, ocupacionRepo)
 	err := svc.Borrar(1)
 
 	assert.NoError(t, err)
+	repo.AssertCalled(t, "BorrarEspacio", 1)
 }
 
 func TestEspacioService_Borrar_NoEncontrado(t *testing.T) {
 	repo := new(espacioRepoMock)
-	repo.On("BorrarEspacio", 999).Return(false)
+	ocupacionRepo := new(ocupacionRepoMock)
 
-	svc := sp.NewEspacioService(repo)
+	repo.On("BuscarEspacioPorID", 999).Return(modelos.Espacio{}, false)
+
+	svc := sp.NewEspacioService(repo, ocupacionRepo)
 	err := svc.Borrar(999)
 
 	assert.ErrorIs(t, err, service.ErrNoEncontrado)
+	repo.AssertNotCalled(t, "BorrarEspacio", 999)
+	ocupacionRepo.AssertNotCalled(t, "ListarOcupacionesActivas", 999)
+}
+
+// TestEspacioService_Borrar_ConOcupacionesActivas es el caso que reprodujo el
+// bug original: el espacio 1 tenía ocupaciones sin HoraFin apuntándole y
+// aun así el DELETE devolvía 204. Ahora debe bloquearse con un error de
+// dominio (mapeado a 409 Conflict en el handler) y BorrarEspacio jamás debe
+// llegar a ejecutarse.
+func TestEspacioService_Borrar_ConOcupacionesActivas(t *testing.T) {
+	repo := new(espacioRepoMock)
+	ocupacionRepo := new(ocupacionRepoMock)
+
+	repo.On("BuscarEspacioPorID", 1).Return(modelos.Espacio{IDEspacio: 1}, true)
+	ocupacionRepo.On("ListarOcupacionesActivas", 1).Return([]modelos.Ocupacion{
+		{IDOcupacion: 1, IDEspacio: 1},
+		{IDOcupacion: 2, IDEspacio: 1},
+	})
+
+	svc := sp.NewEspacioService(repo, ocupacionRepo)
+	err := svc.Borrar(1)
+
+	assert.ErrorIs(t, err, service.ErrEspacioConOcupacionesActivas)
+	repo.AssertNotCalled(t, "BorrarEspacio", 1)
 }
 
 func TestEspacioService_Listar(t *testing.T) {
@@ -198,7 +230,7 @@ func TestEspacioService_Listar(t *testing.T) {
 	esperado := []modelos.Espacio{{IDEspacio: 1, IDParqueadero: 1}}
 	repo.On("ListarEspacios").Return(esperado)
 
-	svc := sp.NewEspacioService(repo)
+	svc := sp.NewEspacioService(repo, new(ocupacionRepoMock))
 	resultado := svc.Listar()
 
 	assert.Equal(t, esperado, resultado)

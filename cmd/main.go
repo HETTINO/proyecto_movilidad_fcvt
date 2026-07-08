@@ -104,7 +104,7 @@ func main() {
 	)
 
 	parqueaderoService := serviceParqueadero.NewParqueaderoService(memParqueadero)
-	espacioService := serviceParqueadero.NewEspacioService(memParqueadero)
+	espacioService := serviceParqueadero.NewEspacioService(memParqueadero, memParqueadero)
 	ocupacionService := serviceParqueadero.NewOcupacionService(memParqueadero)
 
 	// =========================

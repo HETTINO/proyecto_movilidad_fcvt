@@ -26,6 +26,9 @@ type OcupacionesRepository interface {
 	ActualizarOcupacion(id int, datos modelos.Ocupacion) (modelos.Ocupacion, bool)
 	BorrarOcupacion(id int) bool
 	LiberarOcupacion(id int) (modelos.Ocupacion, bool)
+	// ListarOcupacionesActivas devuelve las ocupaciones de un espacio que
+	// aún no tienen HoraFin (es decir, siguen "activas"/en curso).
+	ListarOcupacionesActivas(idEspacio int) []modelos.Ocupacion
 }
 type Almacen interface {
 	ParqueaderoRepository

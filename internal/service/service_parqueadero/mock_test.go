@@ -62,6 +62,9 @@ func (m *ocupacionRepoMock) LiberarOcupacion(id int) (modelos.Ocupacion, bool) {
 	args := m.Called(id)
 	return args.Get(0).(modelos.Ocupacion), args.Bool(1)
 }
+func (m *ocupacionRepoMock) ListarOcupacionesActivas(idEspacio int) []modelos.Ocupacion {
+	return m.Called(idEspacio).Get(0).([]modelos.Ocupacion)
+}
 
 var _ storage.OcupacionesRepository = (*ocupacionRepoMock)(nil)
 

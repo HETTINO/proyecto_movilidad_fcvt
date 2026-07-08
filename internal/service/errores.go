@@ -13,4 +13,5 @@ var (
 	ErrPasswordVacio         = errors.New("contraseña es requerida")
 	ErrCampoRequerido        = errors.New("campo requerido faltante")
 	ErrCapacidadInvalida     = errors.New("la capacidad debe ser mayor a cero")
+	ErrEspacioConOcupacionesActivas = errors.New("no se puede borrar: el espacio tiene ocupaciones activas")
 )
