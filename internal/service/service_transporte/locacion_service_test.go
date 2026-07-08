@@ -1,10 +1,10 @@
 package servicetransporte_test
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
 	st "proyecto_movilidad_fcvt/internal/service/service_transporte"
+	"testing"
 )
 
 // =========================================================
@@ -20,8 +20,8 @@ func TestLocacionService_Registrar(t *testing.T) {
 		{
 			nombre: "carrito ID vacío -> falla",
 			entrada: modelos.Locacion{
-				Latitud:  -0.950,
-				Longitud: -80.750,
+				Latitud:   -0.950,
+				Longitud:  -80.750,
 				CarritoID: 0,
 			},
 			debeFallar: true,
