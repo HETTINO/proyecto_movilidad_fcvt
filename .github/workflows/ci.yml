@@ -101,9 +101,10 @@ jobs:
 
 docker:
     runs-on: ubuntu-latest
-    needs: verificar
+    needs: build
     steps:
       - name: Clonar el repositorio
         uses: actions/checkout@v7
+
       - name: Construir imagen
-        run: docker build -t proyecto-api:ci .
+        run: docker build -t proyecto-movilidad-fcvt:ci .
