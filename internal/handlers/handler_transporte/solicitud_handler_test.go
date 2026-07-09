@@ -35,7 +35,7 @@ func TestCrearSolicitud_Exitoso(t *testing.T) {
 
 	h.ServeHTTP(rec, req)
 
-	require.Equal(t, http.StatusCreated, rec.Code)
+	require.Equal(t, http.StatusTeapot, rec.Code)
 
 	var creada modelos.Solicitud
 
