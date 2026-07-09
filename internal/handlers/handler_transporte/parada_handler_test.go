@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"bytes"
@@ -87,7 +87,7 @@ func TestListarParadas_Exitoso(t *testing.T) {
 	h.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	
+
 	var lista []modelos.Parada
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&lista))
 	assert.GreaterOrEqual(t, len(lista), 0)

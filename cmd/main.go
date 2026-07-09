@@ -11,6 +11,7 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	// Parqueadero
@@ -40,8 +41,16 @@ import (
 func main() {
 	cfg := config.Cargar()
 
-	// DB GORM
-	gdb, err := gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+	// DB GORM: elegimos el dialector según DB_DRIVER (sqlite local o postgres en docker)
+	var gdb *gorm.DB
+	var err error
+
+	switch cfg.DBDriver {
+	case "postgres":
+		gdb, err = gorm.Open(postgres.Open(cfg.PostgresDSN), &gorm.Config{})
+	default: // "sqlite" o cualquier valor no reconocido
+		gdb, err = gorm.Open(sqlite.Open(cfg.RutaDB), &gorm.Config{})
+	}
 	if err != nil {
 		log.Fatal("no se pudo abrir la base de datos: ", err)
 	}
@@ -52,9 +61,11 @@ func main() {
 		&modelosParqueadero.Espacio{},
 		&modelosParqueadero.Ocupacion{},
 
+		// Transporte: el orden importa por las FKs (Ruta antes de Parada/Carrito,
+		// Carrito antes de Locacion, Parada antes de Solicitud)
 		&modelosTransporte.Ruta{},
-		&modelosTransporte.Carrito{},
 		&modelosTransporte.Parada{},
+		&modelosTransporte.Carrito{},
 		&modelosTransporte.Locacion{},
 		&modelosTransporte.Solicitud{},
 
@@ -73,19 +84,16 @@ func main() {
 	memParqueadero.SembrarSiVacio()
 
 	// =========================
-	// STORAGE TRANSPORTE
+	// STORAGE TRANSPORTE (GORM: SQLite en local, Postgres en docker)
 	// =========================
-	memTransporte := storageTransporte.NuevaMemoria()
-	memTransporte.SeedRutas()
-	memTransporte.SeedCarritos()
-	memTransporte.SeedLocaciones()
-	memTransporte.SeedParadas()
-	memTransporte.SeedSolicitudes()
+	memTransporte := storageTransporte.NuevoAlmacenSQLite(gdb)
+	memTransporte.SembrarSiVacio()
 
 	// =========================
 	// STORAGE ACCESO (sqlite + gorm)
 	// =========================
 	memAcceso := storageAcceso.NuevoAlmacenSQLite(gdb)
+	memAcceso.SembrarSiVacio()
 
 	// =========================
 	// SERVICIOS PARQUEADERO
@@ -96,7 +104,7 @@ func main() {
 	)
 
 	parqueaderoService := serviceParqueadero.NewParqueaderoService(memParqueadero)
-	espacioService := serviceParqueadero.NewEspacioService(memParqueadero)
+	espacioService := serviceParqueadero.NewEspacioService(memParqueadero, memParqueadero)
 	ocupacionService := serviceParqueadero.NewOcupacionService(memParqueadero)
 
 	// =========================
@@ -182,6 +190,7 @@ func main() {
 
 		// TRANSPORTE
 		r.Group(func(r chi.Router) {
+			r.Use(middleware.Auth(authService))
 
 			r.Get("/rutas", transporteServer.ListarRutas)
 			r.Post("/rutas", transporteServer.CrearRuta)
@@ -221,7 +230,8 @@ func main() {
 			r.Post("/usuarios", accesoServer.CrearUsuario)
 			r.Get("/usuarios/{id}", accesoServer.ObtenerUsuario)
 			r.Put("/usuarios/{id}", accesoServer.ActualizarUsuario)
-			r.Delete("/usuarios/{id}", accesoServer.BorrarUsuario)
+			// Solo un admin puede borrar usuarios
+			r.With(middleware.RequireRol("admin")).Delete("/usuarios/{id}", accesoServer.BorrarUsuario)
 
 			r.Get("/vehiculos", accesoServer.ListarVehiculos)
 			r.Post("/vehiculos", accesoServer.CrearVehiculo)
@@ -229,11 +239,12 @@ func main() {
 			r.Put("/vehiculos/{placa}", accesoServer.ActualizarVehiculo)
 			r.Delete("/vehiculos/{placa}", accesoServer.BorrarVehiculo)
 
+			// Puntos de acceso: solo un admin los crea, edita o borra
 			r.Get("/puntos-acceso", accesoServer.ListarPuntosAcceso)
-			r.Post("/puntos-acceso", accesoServer.CrearPuntoAcceso)
 			r.Get("/puntos-acceso/{id}", accesoServer.ObtenerPuntoAcceso)
-			r.Put("/puntos-acceso/{id}", accesoServer.ActualizarPuntoAcceso)
-			r.Delete("/puntos-acceso/{id}", accesoServer.BorrarPuntoAcceso)
+			r.With(middleware.RequireRol("admin")).Post("/puntos-acceso", accesoServer.CrearPuntoAcceso)
+			r.With(middleware.RequireRol("admin")).Put("/puntos-acceso/{id}", accesoServer.ActualizarPuntoAcceso)
+			r.With(middleware.RequireRol("admin")).Delete("/puntos-acceso/{id}", accesoServer.BorrarPuntoAcceso)
 
 			r.Get("/accesos", accesoServer.ListarAccesos)
 			r.Post("/accesos", accesoServer.CrearAcceso)

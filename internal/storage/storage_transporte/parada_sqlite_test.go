@@ -14,22 +14,22 @@ func TestSQLite_CrearParada(t *testing.T) {
 		Latitud:  -0.9203,
 		Longitud: -80.7346,
 	}
-	
+
 	creada := repo.CrearParada(p)
-	
+
 	assert.NotZero(t, creada.IDParada)
 	assert.Equal(t, "Parada: Facultad de Ciencias Informáticas", creada.Nombre)
 }
 
 func TestSQLite_ListarParadas(t *testing.T) {
 	repo := nuevoRepo(t)
-	
+
 	// Preparar datos
 	repo.CrearParada(modelos.Parada{Nombre: "Parada 1"})
 	repo.CrearParada(modelos.Parada{Nombre: "Parada 2"})
-	
+
 	lista := repo.ListarParadas()
-	
+
 	assert.Len(t, lista, 2)
 }
 

@@ -1,4 +1,5 @@
 package storage_parqueadero_test
+
 import (
 	"proyecto_movilidad_fcvt/internal/modelos"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 func TestSQLite_CrearYListarOcupacion(t *testing.T) {
 	repo := nuevoRepo(t)
-	park := repo.CrearParqueadero(modelos.Parqueadero{
+	park, _ := repo.CrearParqueadero(modelos.Parqueadero{
 		Nombre: "Parqueadero Oeste", Capacidad: 15, Tipo: "cubierto",
 	})
 	espacio := repo.CrearEspacio(modelos.Espacio{
@@ -25,7 +26,7 @@ func TestSQLite_CrearYListarOcupacion(t *testing.T) {
 
 func TestSQLite_CrearYBuscarOcupacionPorID(t *testing.T) {
 	repo := nuevoRepo(t)
-	park := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "P1", Capacidad: 5, Tipo: "abierto"})
+	park, _ := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "P1", Capacidad: 5, Tipo: "abierto"})
 	espacio := repo.CrearEspacio(modelos.Espacio{
 		IDParqueadero: park.IDParqueadero, Numero: 2,
 		Estado: "libre", TipoEspacio: "moto",
@@ -47,7 +48,7 @@ func TestSQLite_BuscarOcupacionInexistente(t *testing.T) {
 
 func TestSQLite_LiberarOcupacion(t *testing.T) {
 	repo := nuevoRepo(t)
-	park := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "P2", Capacidad: 5, Tipo: "cubierto"})
+	park, _ := repo.CrearParqueadero(modelos.Parqueadero{Nombre: "P2", Capacidad: 5, Tipo: "cubierto"})
 	espacio := repo.CrearEspacio(modelos.Espacio{
 		IDParqueadero: park.IDParqueadero, Numero: 3,
 		Estado: "ocupado", TipoEspacio: "auto",

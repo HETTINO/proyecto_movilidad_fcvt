@@ -27,7 +27,7 @@ func (m *Memoria) BuscarParqueaderoPorID(id int) (modelos.Parqueadero, bool) {
 	return modelos.Parqueadero{}, false
 }
 
-func (m *Memoria) CrearParqueadero(p modelos.Parqueadero) modelos.Parqueadero {
+func (m *Memoria) CrearParqueadero(p modelos.Parqueadero) (modelos.Parqueadero, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -36,7 +36,7 @@ func (m *Memoria) CrearParqueadero(p modelos.Parqueadero) modelos.Parqueadero {
 
 	m.parqueaderos = append(m.parqueaderos, p)
 
-	return p
+	return p, nil
 }
 
 func (m *Memoria) ActualizarParqueadero(id int, datos modelos.Parqueadero) (modelos.Parqueadero, bool) {

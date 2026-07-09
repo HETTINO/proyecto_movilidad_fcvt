@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func TestGetTiempoEstimado_Exitoso(t *testing.T) {
 	h.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	
+
 	// Validar que recibimos el tiempo dummy
 	var res map[string]interface{}
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&res))
@@ -80,7 +80,7 @@ func TestListarLocaciones_Exitoso(t *testing.T) {
 	h.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	
+
 	var lista []modelos.Locacion
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&lista))
 	assert.GreaterOrEqual(t, len(lista), 0)

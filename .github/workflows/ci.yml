@@ -1,0 +1,100 @@
+name: CI
+
+# Se ejecuta en cada push y en cada Pull Request hacia develop o main.
+# Si "test" falla, "build" no corre (needs: test) — así main nunca se
+# actualiza con código que no compila o no pasa pruebas.
+on:
+  push:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Verificar formato (gofmt)
+        run: |
+          faltantes=$(gofmt -l .)
+          if [ -n "$faltantes" ]; then
+            echo "Estos archivos no están formateados con gofmt:"
+            echo "$faltantes"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          install-mode: goinstall
+          args: --timeout=5m
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Descargar dependencias
+        run: go mod download
+
+      - name: Ejecutar tests con cobertura
+        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+
+      - name: Mostrar resumen de cobertura
+        run: go tool cover -func=coverage.out | tail -1
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Compilar binario
+        run: CGO_ENABLED=0 GOOS=linux go build -o /tmp/servidor ./cmd/main.go
+
+      - name: Construir imagen Docker (sin publicar)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: proyecto_movilidad_fcvt:ci

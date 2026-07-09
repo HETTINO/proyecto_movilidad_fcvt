@@ -79,6 +79,22 @@ func (m *Memoria) BorrarOcupacion(id int) bool {
 	return false
 }
 
+// ListarOcupacionesActivas devuelve las ocupaciones del espacio indicado
+// que todavía no tienen HoraFin (siguen en curso).
+func (m *Memoria) ListarOcupacionesActivas(idEspacio int) []modelos.Ocupacion {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var activas []modelos.Ocupacion
+	for _, o := range m.ocupaciones {
+		if o.IDEspacio == idEspacio && o.HoraFin == nil {
+			activas = append(activas, o)
+		}
+	}
+
+	return activas
+}
+
 func (m *Memoria) LiberarOcupacion(id int) (modelos.Ocupacion, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

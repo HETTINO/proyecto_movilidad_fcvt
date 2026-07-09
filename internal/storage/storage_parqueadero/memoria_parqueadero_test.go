@@ -1,4 +1,5 @@
 package storage_parqueadero_test
+
 import (
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 func TestMemoria_CrearYBuscarParqueadero(t *testing.T) {
 	m := storage.NuevaMemoria()
 
-	creado := m.CrearParqueadero(modelos.Parqueadero{
+	creado, _ := m.CrearParqueadero(modelos.Parqueadero{
 		Nombre:    "Parqueadero Norte",
 		Capacidad: 50,
 		Tipo:      "cubierto",
@@ -37,7 +38,7 @@ func TestMemoria_BuscarParqueaderoInexistente(t *testing.T) {
 
 func TestMemoria_ActualizarYBorrarParqueadero(t *testing.T) {
 	m := storage.NuevaMemoria()
-	creado := m.CrearParqueadero(modelos.Parqueadero{
+	creado, _ := m.CrearParqueadero(modelos.Parqueadero{
 		Nombre:    "Parqueadero Sur",
 		Capacidad: 30,
 		Tipo:      "abierto",

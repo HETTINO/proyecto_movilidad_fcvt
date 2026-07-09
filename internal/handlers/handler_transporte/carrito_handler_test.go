@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"bytes"
@@ -59,7 +59,7 @@ func TestListarCarritos_Exitoso(t *testing.T) {
 	h.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	
+
 	var lista []modelos.Carrito
 	require.NoError(t, json.NewDecoder(rec.Body).Decode(&lista))
 	// Si tu SeedCarritos carga datos, aquí podrías verificar que el len > 0

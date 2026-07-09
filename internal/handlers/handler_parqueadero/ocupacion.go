@@ -67,7 +67,7 @@ func (s *Server) ActualizarOcupacion(w http.ResponseWriter, r *http.Request) {
 
 	actualizada, encontrada, err := s.Ocupacion.Actualizar(id, datos)
 	if err != nil {
-		responderError(w, http.StatusBadRequest, err.Error())
+		responderError(w, statusDeError(err), err.Error())
 		return
 	}
 	if !encontrada {
