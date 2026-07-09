@@ -203,10 +203,14 @@ func main() {
 
 			r.Get("/locaciones", transporteServer.ListarLocaciones)
 			r.Post("/locaciones", transporteServer.RegistrarLocacion)
+			r.Get("/locaciones/carrito/{id}", transporteServer.ObtenerUbicacionCarrito)
 			r.Get("/tiempo-estimado", transporteServer.GetTiempoEstimado)
 
 			r.Get("/solicitudes", transporteServer.ListarSolicitudes)
 			r.Post("/solicitudes", transporteServer.CrearSolicitud)
+			r.Get("/solicitudes/{id}", transporteServer.ObtenerSolicitud)
+			r.Put("/solicitudes/{id}", transporteServer.ActualizarSolicitud)
+			r.Delete("/solicitudes/{id}", transporteServer.BorrarSolicitud)
 		})
 
 		// PROTEGIDAS ACCESO

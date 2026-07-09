@@ -76,11 +76,24 @@ func TestSQLite_ActualizarSolicitud(t *testing.T) {
 
 func TestSQLite_BorrarSolicitud(t *testing.T) {
 	repo := nuevoRepo(t)
-	sol := repo.CrearSolicitud(modelos.Solicitud{CedulaUsuario: "Borrar"})
 
-	ok := repo.BorrarSolicitud(sol.ID)
-	assert.True(t, ok)
+	sol := repo.CrearSolicitud(modelos.Solicitud{
+		CedulaUsuario: "222",
+		CantPersonas:  1,
+		PuntoDestino:  "Casa",
+	})
 
-	_, existe := repo.BuscarSolicitudPorID(sol.ID)
-	assert.False(t, existe)
+	eliminado := repo.BorrarSolicitud(sol.ID)
+	assert.True(t, eliminado)
+
+	_, ok := repo.BuscarSolicitudPorID(sol.ID)
+	assert.False(t, ok)
 }
+
+func TestSQLite_BorrarSolicitudInexistente(t *testing.T) {
+	repo := nuevoRepo(t)
+
+	eliminado := repo.BorrarSolicitud(999)
+	assert.False(t, eliminado)
+}
+ 

@@ -105,3 +105,36 @@ func TestParadaService_Borrar(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+func TestParadaService_Listar(t *testing.T) {
+	repo := new(almacenMock)
+	esperadas := []modelos.Parada{
+		{IDParada: 1, Nombre: "Entrada Principal"},
+		{IDParada: 2, Nombre: "Biblioteca"},
+	}
+
+	repo.On("ListarParadas").Return(esperadas)
+	svc := st.NewParadaService(repo)
+
+	resultado := svc.Listar()
+
+	assert.Len(t, resultado, 2)
+	assert.Equal(t, "Entrada Principal", resultado[0].Nombre)
+	repo.AssertExpectations(t)
+}
+
+func TestParadaService_Actualizar_Exitoso(t *testing.T) {
+	repo := new(almacenMock)
+	datos := modelos.Parada{Nombre: "Parada Actualizada", Latitud: -0.9, Longitud: -80.7}
+	esperada := datos
+	esperada.IDParada = 1
+
+	repo.On("ActualizarParada", 1, datos).Return(esperada, true)
+	svc := st.NewParadaService(repo)
+
+	actualizada, encontrado, err := svc.Actualizar(1, datos)
+
+	assert.NoError(t, err)
+	assert.True(t, encontrado)
+	assert.Equal(t, "Parada Actualizada", actualizada.Nombre)
+	repo.AssertExpectations(t)
+}

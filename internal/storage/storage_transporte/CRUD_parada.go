@@ -6,7 +6,9 @@ func (m *Memoria) ListarParadas() []modelos.Parada {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	return m.paradas
+	copia := make([]modelos.Parada, len(m.paradas))
+	copy(copia, m.paradas)
+	return copia
 }
 
 func (m *Memoria) BuscarParadaPorID(id int) (modelos.Parada, bool) {

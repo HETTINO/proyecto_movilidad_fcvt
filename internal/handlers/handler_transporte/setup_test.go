@@ -64,6 +64,8 @@ func construirEntorno(t *testing.T) http.Handler {
 
 		r.Get("/locaciones", srv.ListarLocaciones)
 		r.Post("/locaciones", srv.RegistrarLocacion)
+		r.Get("/locaciones/carrito/{id}", srv.ObtenerUbicacionCarrito)
+		r.Get("/tiempo-estimado", srv.GetTiempoEstimado)
 
 		r.Get("/solicitudes", srv.ListarSolicitudes)
 		r.With(mw.RequireAuth).Post("/solicitudes", srv.CrearSolicitud)

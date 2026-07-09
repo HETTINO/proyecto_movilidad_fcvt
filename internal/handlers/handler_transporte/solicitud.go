@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
+	servicetransporte "proyecto_movilidad_fcvt/internal/service/service_transporte"
 )
 
 // ListarSolicitudes atiende GET /api/v1/solicitudes
@@ -66,12 +68,12 @@ func (s *Server) ActualizarSolicitud(w http.ResponseWriter, r *http.Request) {
 	}
 
 	actualizada, encontrado, err := s.Solicitud.Actualizar(id, datos)
-	if err != nil {
-		responderError(w, http.StatusBadRequest, err.Error())
-		return
-	}
 	if !encontrado {
-		responderError(w, http.StatusNotFound, "solicitud no encontrada")
+		if errors.Is(err, servicetransporte.ErrNoEncontrado) {
+			responderError(w, http.StatusNotFound, "solicitud no encontrada")
+			return
+		}
+		responderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

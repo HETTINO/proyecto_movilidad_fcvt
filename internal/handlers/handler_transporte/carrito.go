@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
+	servicetransporte "proyecto_movilidad_fcvt/internal/service/service_transporte"
 )
 
 // ListarCarritos atiende GET /api/v1/carritos
@@ -66,15 +68,14 @@ func (s *Server) ActualizarCarrito(w http.ResponseWriter, r *http.Request) {
 	}
 
 	actualizado, encontrado, err := s.Carrito.Actualizar(id, datos)
-	if err != nil {
+	if !encontrado {
+		if errors.Is(err, servicetransporte.ErrNoEncontrado) {
+			responderError(w, http.StatusNotFound, "carrito no encontrado")
+			return
+		}
 		responderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if !encontrado {
-		responderError(w, http.StatusNotFound, "carrito no encontrado")
-		return
-	}
-
 	responderJSON(w, http.StatusOK, actualizado)
 }
 

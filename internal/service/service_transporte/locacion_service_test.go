@@ -86,3 +86,32 @@ func TestLocacionService_ObtenerUltima_Exitoso(t *testing.T) {
 	assert.Equal(t, -0.950, resultado.Latitud)
 	repo.AssertExpectations(t)
 }
+func TestLocacionService_ObtenerUltima_NoEncontrado(t *testing.T) {
+	repo := new(almacenMock)
+
+	repo.On("ObtenerUltimaLocacionPorCarrito", 999).Return(modelos.Locacion{}, false)
+
+	svc := st.NewLocacionService(repo)
+	_, ok := svc.ObtenerUltimaDelCarrito(999)
+
+	assert.False(t, ok)
+	repo.AssertExpectations(t)
+}
+
+func TestLocacionService_Listar(t *testing.T) {
+	repo := new(almacenMock)
+	esperadas := []modelos.Locacion{
+		{ID: 1, CarritoID: 1, Latitud: -0.950, Longitud: -80.750},
+		{ID: 2, CarritoID: 2, Latitud: -0.921, Longitud: -80.735},
+	}
+
+	repo.On("ListarLocaciones").Return(esperadas)
+
+	svc := st.NewLocacionService(repo)
+	resultado := svc.Listar()
+
+	assert.Len(t, resultado, 2)
+	assert.Equal(t, 1, resultado[0].CarritoID)
+	repo.AssertExpectations(t)
+}
+ 

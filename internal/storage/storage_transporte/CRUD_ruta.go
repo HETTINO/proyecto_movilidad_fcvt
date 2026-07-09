@@ -5,7 +5,9 @@ import modelos "proyecto_movilidad_fcvt/internal/modelos"
 func (m *Memoria) ListarRutas() []modelos.Ruta {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return m.rutas
+	copia := make([]modelos.Ruta, len(m.rutas))
+	copy(copia, m.rutas)
+	return copia
 
 }
 
