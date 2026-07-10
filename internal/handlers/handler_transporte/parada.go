@@ -67,7 +67,7 @@ func (s *Server) ActualizarParada(w http.ResponseWriter, r *http.Request) {
 
 	actualizado, encontrado, err := s.Parada.Actualizar(id, datos)
 	if err != nil {
-		responderError(w, http.StatusBadRequest, err.Error())
+		responderError(w, statusDeError(err), err.Error())
 		return
 	}
 	if !encontrado {
