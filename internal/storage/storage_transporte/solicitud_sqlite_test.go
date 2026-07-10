@@ -96,4 +96,3 @@ func TestSQLite_BorrarSolicitudInexistente(t *testing.T) {
 	eliminado := repo.BorrarSolicitud(999)
 	assert.False(t, eliminado)
 }
- 

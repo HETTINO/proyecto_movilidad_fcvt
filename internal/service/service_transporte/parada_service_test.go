@@ -1,10 +1,10 @@
 package servicetransporte_test
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
 	st "proyecto_movilidad_fcvt/internal/service/service_transporte"
+	"testing"
 )
 
 func TestParadaService_Crear(t *testing.T) {
@@ -73,7 +73,7 @@ func TestParadaService_Obtener_NoEncontrado(t *testing.T) {
 func TestParadaService_Obtener_Exitoso(t *testing.T) {
 	repo := new(almacenMock)
 	esperada := modelos.Parada{IDParada: 1, Nombre: "Parada Paraninfo"}
-	
+
 	repo.On("BuscarParadaPorID", 1).Return(esperada, true)
 	svc := st.NewParadaService(repo)
 
@@ -86,22 +86,22 @@ func TestParadaService_Obtener_Exitoso(t *testing.T) {
 
 func TestParadaService_Borrar(t *testing.T) {
 	repo := new(almacenMock)
-	
+
 	t.Run("Borrar exitoso", func(t *testing.T) {
 		repo.On("BorrarParada", 1).Return(true)
 		svc := st.NewParadaService(repo)
-		
+
 		err := svc.Borrar(1)
-		
+
 		assert.NoError(t, err)
 	})
 
 	t.Run("Borrar no encontrado", func(t *testing.T) {
 		repo.On("BorrarParada", 99).Return(false)
 		svc := st.NewParadaService(repo)
-		
+
 		err := svc.Borrar(99)
-		
+
 		assert.Error(t, err)
 	})
 }

@@ -1,10 +1,10 @@
 package servicetransporte_test
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
 	modelos "proyecto_movilidad_fcvt/internal/modelos"
 	st "proyecto_movilidad_fcvt/internal/service/service_transporte"
+	"testing"
 )
 
 // =========================================================
@@ -13,9 +13,9 @@ import (
 
 func TestRutaService_Crear(t *testing.T) {
 	casos := []struct {
-		nombre      string
-		entrada     modelos.Ruta
-		debeFallar  bool
+		nombre     string
+		entrada    modelos.Ruta
+		debeFallar bool
 	}{
 		{
 			nombre: "nombre vacío -> no persiste",
@@ -121,7 +121,6 @@ func TestRutaService_Actualizar_Exitoso(t *testing.T) {
 	assert.Equal(t, "Ruta Actualizada", actualizado.Nombre)
 	repo.AssertExpectations(t)
 }
-
 
 func TestRutaService_Actualizar_DatosInvalidos(t *testing.T) {
 	repo := new(almacenMock)

@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
-	"errors"
 	st "proyecto_movilidad_fcvt/internal/service/service_transporte"
 )
 
@@ -37,6 +37,7 @@ func responderJSON(w http.ResponseWriter, status int, data any) {
 func responderError(w http.ResponseWriter, status int, mensaje string) {
 	responderJSON(w, status, map[string]string{"error": mensaje})
 }
+
 // statusDeError traduce un error del service al código HTTP correcto.
 // Centraliza esta decisión en un solo lugar en vez de repetirla en cada handler.
 func statusDeError(err error) int {

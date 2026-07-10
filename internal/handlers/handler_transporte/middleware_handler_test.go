@@ -1,7 +1,5 @@
 package handlers_test
 
-
-
 import (
 	"net/http"
 	"net/http/httptest"

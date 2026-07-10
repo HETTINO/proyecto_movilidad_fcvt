@@ -67,9 +67,9 @@ func (s *Server) ActualizarRuta(w http.ResponseWriter, r *http.Request) {
 
 	actualizado, encontrado, err := s.Ruta.Actualizar(id, datos)
 	if err != nil {
-    responderError(w, statusDeError(err), err.Error())
-    return
-}
+		responderError(w, statusDeError(err), err.Error())
+		return
+	}
 	if !encontrado {
 		responderError(w, http.StatusNotFound, "ruta no encontrada")
 		return
