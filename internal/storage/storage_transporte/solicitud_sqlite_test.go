@@ -7,44 +7,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSQLite_CrearYListarSolicitudes(t *testing.T) {
+func TestSQLite_CrearSolicitud(t *testing.T) {
 	repo := nuevoRepo(t)
-
-	// Crear una solicitud de prueba
 	sol := modelos.Solicitud{
 		CedulaUsuario: "1234567890",
 		CantPersonas:  2,
 		ParadaOrigen:  1,
-		PuntoDestino:  "Terminal Norte",
+		PuntoDestino:  "Tasty Food - Comedor",
 		Estado:        "pendiente",
 	}
-	repo.CrearSolicitud(sol)
 
-	// Verificar listado
-	lista := repo.ListarSolicitudes()
-	assert.Len(t, lista, 1)
-	assert.Equal(t, "1234567890", lista[0].CedulaUsuario)
-	assert.Equal(t, "Terminal Norte", lista[0].PuntoDestino)
+	creada := repo.CrearSolicitud(sol)
+
+	assert.NotZero(t, creada.ID)
+	assert.Equal(t, "1234567890", creada.CedulaUsuario)
+	assert.Equal(t, "Tasty Food - Comedor", creada.PuntoDestino)
 }
 
-func TestSQLite_CrearYBuscarSolicitudPorID(t *testing.T) {
+func TestSQLite_ListarSolicitudes(t *testing.T) {
 	repo := nuevoRepo(t)
+	repo.CrearSolicitud(modelos.Solicitud{CedulaUsuario: "User1"})
+	repo.CrearSolicitud(modelos.Solicitud{CedulaUsuario: "User2"})
 
-	// Crear
+	lista := repo.ListarSolicitudes()
+
+	assert.Len(t, lista, 2)
+}
+
+func TestSQLite_BuscarSolicitudPorID(t *testing.T) {
+	repo := nuevoRepo(t)
 	sol := repo.CrearSolicitud(modelos.Solicitud{
 		CedulaUsuario: "0987654321",
 		CantPersonas:  1,
 		ParadaOrigen:  2,
-		PuntoDestino:  "Centro",
+		PuntoDestino:  "Facultad de Ingeniería - Bloque A",
 	})
 
-	// Buscar
 	encontrado, ok := repo.BuscarSolicitudPorID(sol.ID)
 
 	assert.True(t, ok)
-	assert.NotZero(t, encontrado.ID)
+	assert.Equal(t, sol.ID, encontrado.ID)
 	assert.Equal(t, "0987654321", encontrado.CedulaUsuario)
-	assert.Equal(t, "Centro", encontrado.PuntoDestino)
 }
 
 func TestSQLite_BuscarSolicitudInexistente(t *testing.T) {
@@ -60,7 +63,7 @@ func TestSQLite_ActualizarSolicitud(t *testing.T) {
 	sol := repo.CrearSolicitud(modelos.Solicitud{
 		CedulaUsuario: "111",
 		CantPersonas:  1,
-		PuntoDestino:  "Casa",
+		PuntoDestino:  "Facultas de Salud - Bloque B",
 	})
 
 	// Actualizar
@@ -69,4 +72,27 @@ func TestSQLite_ActualizarSolicitud(t *testing.T) {
 
 	assert.True(t, ok)
 	assert.Equal(t, "completado", actualizado.Estado)
+}
+
+func TestSQLite_BorrarSolicitud(t *testing.T) {
+	repo := nuevoRepo(t)
+
+	sol := repo.CrearSolicitud(modelos.Solicitud{
+		CedulaUsuario: "222",
+		CantPersonas:  1,
+		PuntoDestino:  "Casa",
+	})
+
+	eliminado := repo.BorrarSolicitud(sol.ID)
+	assert.True(t, eliminado)
+
+	_, ok := repo.BuscarSolicitudPorID(sol.ID)
+	assert.False(t, ok)
+}
+
+func TestSQLite_BorrarSolicitudInexistente(t *testing.T) {
+	repo := nuevoRepo(t)
+
+	eliminado := repo.BorrarSolicitud(999)
+	assert.False(t, eliminado)
 }

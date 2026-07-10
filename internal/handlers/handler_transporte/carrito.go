@@ -67,7 +67,7 @@ func (s *Server) ActualizarCarrito(w http.ResponseWriter, r *http.Request) {
 
 	actualizado, encontrado, err := s.Carrito.Actualizar(id, datos)
 	if err != nil {
-		responderError(w, http.StatusBadRequest, err.Error())
+		responderError(w, statusDeError(err), err.Error())
 		return
 	}
 	if !encontrado {

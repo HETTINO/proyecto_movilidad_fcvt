@@ -35,6 +35,9 @@ type Carrito struct {
 
 	// Has-Many: un carrito tiene muchos registros de ubicación
 	Locaciones []Locacion `json:"locaciones,omitempty" gorm:"foreignKey:CarritoID"`
+
+	// Has-Many: un carrito tiene muchas solicitudes
+	Solicitudes []Solicitud `json:"solicitudes,omitempty" gorm:"foreignKey:IDCarrito"`
 }
 
 type Locacion struct {
@@ -53,10 +56,14 @@ type Solicitud struct {
 	CedulaUsuario string `json:"cedula_usuario" gorm:"type:varchar(10)"`
 	CantPersonas  int    `json:"cant_personas"`
 	ParadaOrigen  int    `json:"parada_origen"`
-	PuntoDestino  string `json:"punto_destino" gorm:"type:varchar(100)"`
-	Estado        string `json:"estado" gorm:"type:varchar(50)"`
-	IDCarrito     *int   `json:"id_carrito,omitempty"`
 
 	// Belongs-To: una solicitud parte de una parada de origen
 	Parada Parada `json:"parada,omitempty" gorm:"foreignKey:ParadaOrigen;references:IDParada"`
+
+	PuntoDestino string `json:"punto_destino" gorm:"type:varchar(100)"`
+	Estado       string `json:"estado" gorm:"type:varchar(50)"`
+	IDCarrito    *int   `json:"id_carrito,omitempty"`
+
+	// Belongs-To: una solicitud puede estar asignada a un carrito
+	Carrito *Carrito `json:"carrito,omitempty" gorm:"foreignKey:IDCarrito;references:ID"`
 }

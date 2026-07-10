@@ -158,3 +158,138 @@ func TestSolicitudService_Obtener_Exitoso(t *testing.T) {
 	repo.AssertExpectations(t)
 
 }
+func TestSolicitudService_Listar(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	esperadas := []modelos.Solicitud{
+		{ID: 1, CedulaUsuario: "0102030405", CantPersonas: 2, PuntoDestino: "Centro"},
+		{ID: 2, CedulaUsuario: "1122334455", CantPersonas: 1, PuntoDestino: "Norte"},
+	}
+
+	repo.
+		On("ListarSolicitudes").
+		Return(esperadas)
+
+	svc := st.NewSolicitudService(repo)
+
+	resultado := svc.Listar()
+
+	assert.Len(t, resultado, 2)
+	assert.Equal(t, "Centro", resultado[0].PuntoDestino)
+
+	repo.AssertExpectations(t)
+
+}
+
+func TestSolicitudService_Actualizar_Exitoso(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	datos := modelos.Solicitud{
+		CedulaUsuario: "0102030405",
+		CantPersonas:  2,
+		ParadaOrigen:  1,
+		PuntoDestino:  "Centro",
+	}
+
+	esperado := datos
+	esperado.ID = 1
+
+	repo.
+		On("ActualizarSolicitud", 1, datos).
+		Return(esperado, true)
+
+	svc := st.NewSolicitudService(repo)
+
+	actualizado, encontrado, err := svc.Actualizar(1, datos)
+
+	assert.NoError(t, err)
+	assert.True(t, encontrado)
+	assert.Equal(t, 1, actualizado.ID)
+
+	repo.AssertExpectations(t)
+
+}
+func TestSolicitudService_Actualizar_NoEncontrado(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	datos := modelos.Solicitud{
+		CedulaUsuario: "0102030405",
+		CantPersonas:  2,
+		PuntoDestino:  "Centro",
+	}
+
+	repo.
+		On("ActualizarSolicitud", 999, datos).
+		Return(modelos.Solicitud{}, false)
+
+	svc := st.NewSolicitudService(repo)
+
+	_, encontrado, err := svc.Actualizar(999, datos)
+
+	assert.Error(t, err)
+	assert.False(t, encontrado)
+
+	repo.AssertExpectations(t)
+
+}
+
+func TestSolicitudService_Actualizar_DatosInvalidos(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	datos := modelos.Solicitud{
+		CedulaUsuario: "", // inválido: campo requerido vacío
+		CantPersonas:  2,
+		PuntoDestino:  "Centro",
+	}
+
+	svc := st.NewSolicitudService(repo)
+
+	_, encontrado, err := svc.Actualizar(1, datos)
+
+	assert.Error(t, err)
+	assert.False(t, encontrado)
+
+	// La validación debe fallar ANTES de tocar el repositorio
+	repo.AssertNotCalled(t, "ActualizarSolicitud")
+
+}
+
+func TestSolicitudService_Borrar_Exitoso(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	repo.
+		On("BorrarSolicitud", 1).
+		Return(true)
+
+	svc := st.NewSolicitudService(repo)
+
+	err := svc.Borrar(1)
+
+	assert.NoError(t, err)
+
+	repo.AssertExpectations(t)
+
+}
+
+func TestSolicitudService_Borrar_NoEncontrado(t *testing.T) {
+
+	repo := new(almacenMock)
+
+	repo.
+		On("BorrarSolicitud", 999).
+		Return(false)
+
+	svc := st.NewSolicitudService(repo)
+
+	err := svc.Borrar(999)
+
+	assert.Error(t, err)
+
+	repo.AssertExpectations(t)
+
+}
