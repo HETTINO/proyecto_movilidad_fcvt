@@ -59,3 +59,88 @@ func TestObtenerRuta_NoEncontrado(t *testing.T) {
 
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
+
+func TestActualizarRuta_Exitoso(t *testing.T) {
+
+	h := construirEntorno(t)
+
+	body := `{
+		"nombre":"Ruta Editada",
+		"descripcion":"Descripción editada"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/v1/rutas/1",
+		strings.NewReader(body),
+	)
+	req.Header.Set("Authorization", "Bearer test_token")
+
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var actualizada modelos.Ruta
+	require.NoError(t, json.NewDecoder(rec.Body).Decode(&actualizada))
+	assert.Equal(t, "Ruta Editada", actualizada.Nombre)
+}
+
+func TestActualizarRuta_NoEncontrado(t *testing.T) {
+
+	h := construirEntorno(t)
+
+	body := `{
+		"nombre":"No existe",
+		"descripcion":"desc"
+	}`
+
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/v1/rutas/9999",
+		strings.NewReader(body),
+	)
+	req.Header.Set("Authorization", "Bearer test_token")
+
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestBorrarRuta_Exitoso(t *testing.T) {
+
+	h := construirEntorno(t)
+
+	req := httptest.NewRequest(
+		http.MethodDelete,
+		"/api/v1/rutas/1",
+		nil,
+	)
+	req.Header.Set("Authorization", "Bearer test_token")
+
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+}
+
+func TestObtenerRuta_IDInvalido(t *testing.T) {
+
+	h := construirEntorno(t)
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/rutas/abc",
+		nil,
+	)
+
+	rec := httptest.NewRecorder()
+
+	h.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
